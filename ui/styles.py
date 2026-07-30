@@ -666,17 +666,19 @@ div[data-testid="stFileUploaderFileData"] button,
     color: #64748b !important;
 }
 
-/* Inputs & Selectboxes (Slight Tint Background) */
-.stSelectbox > div > div, .stTextInput > div > div > input,
-div[data-baseweb="select"] > div {
-    background: #f1f5f9 !important;
+/* Inputs & Selectboxes (High Contrast Executive Theme) */
+div[data-baseweb="select"],
+div[data-baseweb="select"] > div,
+div[data-baseweb="select"] [data-testid="stSelectbox"] {
+    background-color: #f1f5f9 !important;
     border: 2.5px solid #0f172a !important;
     border-radius: 8px !important;
     color: #0f172a !important;
-    font-weight: 800 !important;
 }
 
-div[data-baseweb="select"] * {
+div[data-baseweb="select"] [data-aria-selected="true"],
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] div {
     color: #0f172a !important;
     font-weight: 800 !important;
 }
@@ -686,10 +688,37 @@ div[data-baseweb="select"] svg {
     color: #0f172a !important;
 }
 
-.stSelectbox > div > div:focus-within, .stTextInput > div > div > input:focus {
-    border-color: #000000 !important;
-    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.12) !important;
+/* Selectbox Dropdown Menu Popover */
+ul[data-baseweb="menu"],
+div[data-baseweb="popover"],
+div[data-baseweb="popover"] ul {
+    background-color: #f1f5f9 !important;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 8px !important;
 }
+
+ul[data-baseweb="menu"] li,
+div[data-baseweb="popover"] li,
+div[data-baseweb="popover"] [role="option"] {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+ul[data-baseweb="menu"] li:hover,
+div[data-baseweb="popover"] li:hover,
+div[data-baseweb="popover"] [role="option"]:aria-selected="true",
+div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+}
+
+ul[data-baseweb="menu"] li:hover *,
+div[data-baseweb="popover"] li:hover *,
+div[data-baseweb="popover"] [role="option"][aria-selected="true"] * {
+    color: #ffffff !important;
+}
+
 
 /* Fix Streamlit Sliders & Labels for Light Executive Theme */
 div[data-testid="stWidgetLabel"],
