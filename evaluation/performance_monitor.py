@@ -1,31 +1,44 @@
 import os
-import json
 import time
 from typing import List, Dict, Any, Optional
-from config import PERFORMANCE_LOG_FILE
+from supabase import create_client, Client
+from config import SUPABASE_URL, SUPABASE_KEY, PERFORMANCE_LOG_FILE
 
 class PerformanceMonitor:
-    """Advanced Telemetry & Grounding Confidence Index (GCI) Monitor."""
+    """Advanced Telemetry & Grounding Confidence Index (GCI) Monitor backed by Supabase Cloud."""
 
     def __init__(self, log_file: str = PERFORMANCE_LOG_FILE):
         self.log_file = log_file
-        self._ensure_log_file()
+        self.client: Optional[Client] = None
+        self._init_client()
 
-    def _ensure_log_file(self):
-        if not os.path.exists(self.log_file):
-            with open(self.log_file, "w", encoding="utf-8") as f:
-                json.dump([], f, indent=2)
+    def _init_client(self):
+        if SUPABASE_URL and SUPABASE_KEY:
+            try:
+                self.client = create_client(SUPABASE_URL, SUPABASE_KEY)
+            except Exception as e:
+                print(f"Supabase PerformanceMonitor client error: {e}")
+                self.client = None
 
     def load_logs(self) -> List[Dict[str, Any]]:
-        try:
-            with open(self.log_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
+        """Load performance logs from Supabase Cloud table (fallback to local)."""
+        if self.client:
+            try:
+                res = self.client.table("performance_logs").select("*").order("timestamp", desc=False).execute()
+                if res.data is not None:
+                    return res.data
+            except Exception as e:
+                print(f"Supabase load_logs error: {e}")
 
-    def _save_logs(self, logs: List[Dict[str, Any]]):
-        with open(self.log_file, "w", encoding="utf-8") as f:
-            json.dump(logs, f, indent=2)
+        # Local fallback
+        if os.path.exists(self.log_file):
+            try:
+                import json
+                with open(self.log_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                return []
+        return []
 
     def log_query_event(
         self,
@@ -39,7 +52,7 @@ class PerformanceMonitor:
         active_doc_count: int,
         compression_stats: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Record telemetry log with Grounding Confidence Index (GCI) metrics."""
+        """Record telemetry log with Grounding Confidence Index (GCI) metrics directly to Supabase."""
         total_latency_ms = retrieval_time_ms + gen_time_ms
         scores = [item.get("score", 0.0) for item in retrieved_chunks]
         avg_retrieval_score = sum(scores) / len(scores) if scores else 0.0
@@ -65,16 +78,18 @@ class PerformanceMonitor:
             "lexical_overlap_ratio": gci_metrics["lexical_overlap"],
             "citation_density": gci_metrics["citation_density"],
             "hallucination_risk": gci_metrics["risk_level"],
-            "vector_db": "ChromaDB",
+            "vector_db": "Supabase",
             "embedding_model": embedding_model,
             "llm_model": llm_model,
             "active_doc_count": active_doc_count,
             "payload_chars": compression_stats.get("payload_char_count", 0)
         }
 
-        logs = self.load_logs()
-        logs.append(log_entry)
-        self._save_logs(logs)
+        if self.client:
+            try:
+                self.client.table("performance_logs").insert(log_entry).execute()
+            except Exception as e:
+                print(f"Error inserting performance_log into Supabase: {e}")
 
         return log_entry
 
@@ -116,5 +131,9 @@ class PerformanceMonitor:
         }
 
     def clear_logs(self):
-        """Purge telemetry log history."""
-        self._save_logs([])
+        """Purge telemetry log history from Supabase."""
+        if self.client:
+            try:
+                self.client.table("performance_logs").delete().neq("query_id", "").execute()
+            except Exception as e:
+                print(f"Error clearing performance_logs in Supabase: {e}")
