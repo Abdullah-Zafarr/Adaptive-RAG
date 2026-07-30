@@ -627,8 +627,10 @@ div.stButton > button:active p {
 }
 
 /* Fix File Uploader Dropzone Container (Thick 2.5px Dashed Border) */
+/* Fix File Uploader Dropzone Container (Matching Height & Color) */
 div[data-testid="stFileUploader"] {
-    padding: 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 div[data-testid="stFileUploaderDropzone"],
@@ -637,10 +639,14 @@ section[data-testid="stFileUploaderDropzone"] {
     background: #f1f5f9 !important;
     border: 2.5px dashed #0f172a !important;
     border-radius: 10px !important;
-    padding: 12px 14px !important;
-    margin: 3px 0 !important;
+    padding: 8px 14px !important;
+    margin: 0 !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 div[data-testid="stFileUploaderDropzone"] *,
@@ -658,7 +664,8 @@ section[data-testid="stFileUploaderDropzone"] button {
     border: 2px solid #000000 !important;
     border-radius: 6px !important;
     font-weight: 700 !important;
-    padding: 6px 16px !important;
+    padding: 4px 12px !important;
+    height: 34px !important;
 }
 
 div[data-testid="stFileUploaderDropzone"] button *,
@@ -717,31 +724,51 @@ div[data-testid="stFileUploaderFileData"] button,
     color: #64748b !important;
 }
 
-/* Fix Text Inputs (Web Endpoint Ingest Input Box) */
-div[data-testid="stTextInput"] input,
-div[data-testid="stTextInput"] div[data-baseweb="input"],
+/* Fix Text Inputs (Web Endpoint Ingest Input Box - Exact Match to Dropzone) */
+div[data-testid="stTextInput"],
+div[data-testid="stTextInput"] > div,
 div[data-testid="stTextInput"] div[data-baseweb="base-input"],
+div[data-testid="stTextInput"] div[data-baseweb="input"] {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    border-radius: 10px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+div[data-testid="stTextInput"] input,
 .stTextInput > div > div > input {
     background-color: #f1f5f9 !important;
     background: #f1f5f9 !important;
     color: #0f172a !important;
     border: 2.5px solid #0f172a !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     font-weight: 800 !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    box-sizing: border-box !important;
+    padding: 0 14px !important;
 }
 
 div[data-testid="stTextInput"] input:focus,
 div[data-testid="stTextInput"] input:active,
+div[data-testid="stTextInput"] input:-webkit-autofill,
 div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
     background-color: #ffffff !important;
     background: #ffffff !important;
     color: #0f172a !important;
     border-color: #000000 !important;
+    -webkit-text-fill-color: #0f172a !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 
 div[data-testid="stTextInput"] input::placeholder {
     color: #64748b !important;
 }
+
 
 /* Inputs & Selectboxes (High Contrast Executive Theme) */
 
