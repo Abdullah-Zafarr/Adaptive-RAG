@@ -315,8 +315,8 @@ with main_col:
                     <div class="feature-card">
                         <div class="feature-title">{CHROMA_LOGO_SVG} Supabase Vector Index</div>
                         <div class="feature-desc">Cloud PostgreSQL vector store powered by pgvector with dynamic similarity distance filtering.</div>
-
                     </div>
+
                     <div class="feature-card">
                         <div class="feature-title">{HF_LOGO_SVG} HuggingFace Embeddings</div>
                         <div class="feature-desc">384d & 768d dense semantic vectorizers running locally with zero latency.</div>
@@ -414,18 +414,11 @@ with main_col:
 
         # Footer
         st.markdown(
-            f"""
-            <div class="app-footer">
-                <span>{GROQ_LOGO_SVG} Powered by Groq</span>
-                <span>•</span>
-                <span>{CHROMA_LOGO_SVG} Supabase Engine</span>
-
-                <span>•</span>
-                <span>{len(get_active_docs())} Active Sources</span>
-            </div>
-            """,
+            f"""<div class="app-footer"><span>{GROQ_LOGO_SVG} Powered by Groq</span><span>•</span><span>{CHROMA_LOGO_SVG} Supabase Engine</span><span>•</span><span>{len(get_active_docs())} Active Sources</span></div>""",
             unsafe_allow_html=True,
         )
+
+
 
     # ═══════════════════════════════════════════════════════════════════════════
     # PAGE: DOCUMENTS
