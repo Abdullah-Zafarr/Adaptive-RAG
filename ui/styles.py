@@ -454,54 +454,60 @@ div[data-testid="column"] .prompt-btn div.stButton > button:hover {
     border-radius: 5px;
 }
 
-/* ─── System Status Grid (Slight Tint Background) ───────────── */
+/* ─── System Status Grid (Balanced Equal-Proportion Tiles) ───── */
 .status-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
+    gap: 6px;
 }
 
 .status-tile {
     background: #e2e8f0 !important;
     border: 2.5px solid #0f172a;
-    border-radius: 10px;
-    padding: 10px 4px;
+    border-radius: 8px;
+    padding: 8px 4px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    min-height: 82px;
+    height: 88px;
+    min-height: 88px;
+    box-sizing: border-box !important;
 }
 
 .status-service {
-    font-size: 0.72rem;
+    font-size: 0.70rem;
     font-weight: 800;
     color: #0f172a;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
     white-space: nowrap;
+    width: 100%;
 }
 
 .status-provider {
-    font-size: 0.68rem;
-    color: #475569;
-    margin-top: 2px;
-    margin-bottom: 4px;
-    font-weight: 600;
+    font-size: 0.65rem;
+    color: #334155;
+    margin-top: 1px;
+    margin-bottom: 3px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .status-healthy {
-    font-size: 0.70rem;
+    font-size: 0.68rem;
     font-weight: 800;
     color: #0f172a;
-    background: #f1f5f9 !important;
-    padding: 3px 10px;
+    background: #ffffff !important;
+    border: 2px solid #0f172a !important;
     border-radius: 6px;
-    border: 2px solid #0f172a;
-    display: inline-block;
+    padding: 2px 0;
+    width: 90%;
+    text-align: center;
+    box-sizing: border-box !important;
 }
 
 .all-operational {
@@ -531,29 +537,31 @@ div[data-testid="column"] div.stButton > button:hover {
     border-color: #000000 !important;
 }
 
-/* Fix File Uploader (Slight Tint Background & Dashed Border) */
-div[data-testid="stFileUploader"],
-div[data-testid="stFileUploader"] *,
-div[data-testid="stFileUploaderDropzone"],
-div[data-testid="stFileUploaderDropzone"] *,
-section[data-testid="stFileUploaderDropzone"],
-section[data-testid="stFileUploaderDropzone"] *,
-div[data-baseweb="file-uploader"],
-div[data-baseweb="file-uploader"] * {
-    background-color: #f1f5f9 !important;
-    background: #f1f5f9 !important;
-    color: #0f172a !important;
+/* Fix File Uploader Dropzone Container (Thick 2.5px Dashed Border) */
+div[data-testid="stFileUploader"] {
+    padding: 2px !important;
 }
 
 div[data-testid="stFileUploaderDropzone"],
 section[data-testid="stFileUploaderDropzone"] {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
     border: 2.5px dashed #0f172a !important;
     border-radius: 10px !important;
-    padding: 10px 14px !important;
+    padding: 12px 14px !important;
+    margin: 3px 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
 }
 
+div[data-testid="stFileUploaderDropzone"] *,
+section[data-testid="stFileUploaderDropzone"] * {
+    background-color: transparent !important;
+    color: #0f172a !important;
+}
+
+/* Browse Files Button */
 div[data-testid="stFileUploaderDropzone"] button,
-div[data-testid="stFileUploader"] button,
 section[data-testid="stFileUploaderDropzone"] button {
     background-color: #0f172a !important;
     background: #0f172a !important;
@@ -565,12 +573,11 @@ section[data-testid="stFileUploaderDropzone"] button {
 }
 
 div[data-testid="stFileUploaderDropzone"] button *,
-div[data-testid="stFileUploader"] button *,
 section[data-testid="stFileUploaderDropzone"] button * {
     color: #ffffff !important;
 }
 
-/* Uploaded File Chip Container (Thick 2.5px Border & White Background) */
+/* Uploaded File Chip Container (Thick 2.5px Solid Border & White Background) */
 div[data-testid="stFileUploaderFileData"],
 [data-testid="stFileUploaderFileData"],
 div[data-testid="stFileUploader"] section + ul li,
@@ -581,12 +588,14 @@ div[data-testid="stFileUploader"] ul li {
     border-radius: 8px !important;
     padding: 8px 12px !important;
     margin-top: 8px !important;
+    box-sizing: border-box !important;
 }
 
 div[data-testid="stFileUploaderFileData"] *,
 [data-testid="stFileUploaderFileData"] * {
     color: #0f172a !important;
     font-weight: 800 !important;
+    background-color: transparent !important;
 }
 
 div[data-testid="stFileUploaderFileData"] button,
