@@ -1,0 +1,679 @@
+"""Adaptive RAG - Executive Theme with Subtle Background Fills & Thick 2.5px Borders."""
+
+CUSTOM_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ─── Global Reset ───────────────────────────────────────────── */
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+}
+
+.stApp {
+    background-color: #f8fafc !important;
+}
+
+/* Remove default Streamlit padding */
+.block-container {
+    padding: 1rem 1.5rem 1rem 1.5rem !important;
+    max-width: 100% !important;
+}
+
+/* Hide default Streamlit header & footer */
+#MainMenu, footer, header { display: none !important; }
+.stDeployButton { display: none !important; }
+
+/* ─── Sidebar (Soft Tint Panel Background & Thick 2.5px Borders) ── */
+section[data-testid="stSidebar"] {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    border-right: 2.5px solid #0f172a !important;
+}
+
+section[data-testid="stSidebar"] > div {
+    background-color: #f1f5f9 !important;
+    padding: 0.1rem 0.75rem 0.75rem 0.75rem !important;
+    box-sizing: border-box !important;
+}
+
+/* App Logo Header */
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.38rem 0.55rem;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 10px;
+    background: #ffffff !important;
+    margin-bottom: 0.5rem;
+    margin-top: -0.25rem !important;
+    box-sizing: border-box !important;
+}
+
+.app-logo-icon {
+    width: 36px;
+    height: 36px;
+    background: #581c87 !important;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #ffffff !important;
+    flex-shrink: 0;
+}
+
+.app-logo-name {
+    font-size: 1.0rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.app-logo-sub {
+    font-size: 0.72rem;
+    color: #334155;
+    font-weight: 700;
+}
+
+/* ─── Sidebar Navigation Buttons ─── */
+section[data-testid="stSidebar"] div[data-testid="stElementContainer"],
+section[data-testid="stSidebar"] div[data-testid="element-container"],
+section[data-testid="stSidebar"] div.stButton {
+    margin-bottom: 5px !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+}
+
+/* Inactive Nav Buttons */
+section[data-testid="stSidebar"] div.stButton > button {
+    background: #ffffff !important;
+    border: 2.5px solid #0f172a !important;
+    color: #0f172a !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-size: 0.86rem !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+section[data-testid="stSidebar"] div.stButton > button:hover {
+    background: #0f172a !important;
+    color: #ffffff !important;
+}
+
+/* Active Nav Button (Solid Dark Black) */
+.nav-active-wrap div.stButton > button,
+section[data-testid="stSidebar"] div.stButton.nav-active > button {
+    background: #0f172a !important;
+    border: 2.5px solid #000000 !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+.nav-active-wrap button div p {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+/* Add Document Button in Sidebar */
+section[data-testid="stSidebar"] div.stButton.add-doc-btn > button {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    margin-top: 6px !important;
+    justify-content: center !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    white-space: nowrap !important;
+}
+
+section[data-testid="stSidebar"] div.stButton.add-doc-btn > button:hover {
+    background: #0f172a !important;
+    color: #ffffff !important;
+}
+
+/* Active Data Sources Section Header */
+.sidebar-section-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 6px;
+    margin: 0.75rem 0 0.5rem 0;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+}
+
+.source-badge {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.doc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #ffffff !important;
+    border: 2.5px solid #0f172a;
+    margin-bottom: 6px;
+}
+
+.doc-icon {
+    width: 30px;
+    height: 30px;
+    background: #991b1b;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #ffffff;
+    flex-shrink: 0;
+    border: 1.5px solid #7f1d1d;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.doc-icon.txt {
+    color: #ffffff;
+    background: #075985;
+    border-color: #0c4a6e;
+}
+
+.doc-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.doc-name {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doc-meta {
+    font-size: 0.70rem;
+    color: #475569;
+    margin-top: 1px;
+}
+
+/* ─── Main Header & Headings ─────────────────────────────────── */
+.welcome-title {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.2;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #0f172a;
+    width: 100%;
+}
+
+.welcome-subtitle {
+    font-size: 0.88rem;
+    color: #475569;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Feature Architecture Grid (Slight Tint Background) */
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 1rem 0;
+}
+
+.feature-card {
+    background: #f1f5f9 !important;
+    border: 2.5px solid #0f172a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+    border-color: #000000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.feature-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.feature-desc {
+    font-size: 0.80rem;
+    color: #334155;
+    line-height: 1.45;
+}
+
+/* Suggested Prompts Buttons (Slight Tint Background) */
+.prompt-btn, .prompt-btn div.stButton {
+    width: 100% !important;
+}
+
+.prompt-btn button,
+div.prompt-btn div.stButton > button,
+div[data-testid="column"] .prompt-btn div.stButton > button {
+    background: #f1f5f9 !important;
+    border: 2.5px solid #0f172a !important;
+    color: #0f172a !important;
+    border-radius: 20px !important;
+    padding: 6px 8px !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.prompt-btn button:hover,
+div.prompt-btn div.stButton > button:hover,
+div[data-testid="column"] .prompt-btn div.stButton > button:hover {
+    background: #0f172a !important;
+    color: #ffffff !important;
+}
+
+/* AI Message Card (Slight Tint Background) */
+.ai-message-card {
+    background: #f1f5f9 !important;
+    border: 2.5px solid #0f172a;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.ai-icon {
+    width: 28px;
+    height: 28px;
+    background: #0f172a;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.ai-content {
+    font-size: 0.90rem;
+    color: #0f172a;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Source Pills */
+.source-pills-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1.5px solid #e2e8f0;
+    font-size: 0.78rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.source-pill {
+    background: #0f172a;
+    border: 1.5px solid #000000;
+    color: #ffffff;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* Footer Line */
+.app-footer {
+    font-size: 0.85rem;
+    color: #0f172a;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 2.5px solid #0f172a;
+}
+
+/* ─── Right Panel Cards (Slight Tint Background) ─────────────── */
+.panel-card {
+    background: #f1f5f9 !important;
+    border: 2.5px solid #0f172a;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.panel-card-title {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 2.5px solid #0f172a;
+}
+
+.panel-time-badge {
+    font-size: 0.68rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.metric-tile {
+    background: #e2e8f0 !important;
+    border: 2.5px solid #0f172a;
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.metric-label {
+    font-size: 0.66rem;
+    color: #334155;
+    font-weight: 700;
+    margin-bottom: 1px;
+}
+
+.metric-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.metric-delta {
+    font-size: 0.68rem;
+    font-weight: 800;
+    margin-top: 2px;
+    color: #0f172a;
+}
+
+.retrieval-avg-badge {
+    background: #0f172a;
+    border: 1.5px solid #000000;
+    color: #ffffff;
+    font-size: 0.70rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 5px;
+}
+
+/* ─── System Status Grid (Slight Tint Background) ───────────── */
+.status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.status-tile {
+    background: #e2e8f0 !important;
+    border: 2.5px solid #0f172a;
+    border-radius: 10px;
+    padding: 10px 4px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 82px;
+}
+
+.status-service {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.status-provider {
+    font-size: 0.68rem;
+    color: #475569;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.status-healthy {
+    font-size: 0.70rem;
+    font-weight: 800;
+    color: #0f172a;
+    background: #f1f5f9 !important;
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 2px solid #0f172a;
+    display: inline-block;
+}
+
+.all-operational {
+    font-size: 0.72rem;
+    color: #0f172a;
+    font-weight: 800;
+    background: #f1f5f9 !important;
+    padding: 3px 12px;
+    border-radius: 20px;
+    border: 2px solid #0f172a;
+}
+
+/* Main Action Buttons in Columns */
+div[data-testid="column"] div.stButton > button {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border: 2.5px solid #000000 !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="column"] div.stButton > button:hover {
+    background: #1e293b !important;
+    border-color: #000000 !important;
+}
+
+/* Fix File Uploader (Slight Tint Background & Dashed Border) */
+div[data-testid="stFileUploader"],
+div[data-testid="stFileUploader"] *,
+div[data-testid="stFileUploaderDropzone"],
+div[data-testid="stFileUploaderDropzone"] *,
+section[data-testid="stFileUploaderDropzone"],
+section[data-testid="stFileUploaderDropzone"] *,
+div[data-baseweb="file-uploader"],
+div[data-baseweb="file-uploader"] * {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+div[data-testid="stFileUploaderDropzone"],
+section[data-testid="stFileUploaderDropzone"] {
+    border: 2.5px dashed #0f172a !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+}
+
+div[data-testid="stFileUploaderDropzone"] button,
+div[data-testid="stFileUploader"] button,
+section[data-testid="stFileUploaderDropzone"] button {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    padding: 6px 16px !important;
+}
+
+div[data-testid="stFileUploaderDropzone"] button *,
+div[data-testid="stFileUploader"] button *,
+section[data-testid="stFileUploaderDropzone"] button * {
+    color: #ffffff !important;
+}
+
+/* Uploaded File Chip Container (Thick 2.5px Border & White Background) */
+div[data-testid="stFileUploaderFileData"],
+[data-testid="stFileUploaderFileData"],
+div[data-testid="stFileUploader"] section + ul li,
+div[data-testid="stFileUploader"] ul li {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    margin-top: 8px !important;
+}
+
+div[data-testid="stFileUploaderFileData"] *,
+[data-testid="stFileUploaderFileData"] * {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+div[data-testid="stFileUploaderFileData"] button,
+[data-testid="stFileUploaderFileData"] button {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+    border-radius: 6px !important;
+}
+
+/* Fix Chat Input Textarea (Slight Tint Background) */
+[data-testid="stChatInput"],
+[data-testid="stChatInput"] *,
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] div[data-baseweb="base-input"],
+[data-testid="stChatInput"] div[data-baseweb="input"],
+[data-testid="stChatInput"] textarea {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+[data-testid="stChatInput"] > div {
+    border: 2.5px solid #0f172a !important;
+    border-radius: 12px !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #64748b !important;
+}
+
+/* Inputs & Selectboxes (Slight Tint Background) */
+.stSelectbox > div > div, .stTextInput > div > div > input {
+    background: #f1f5f9 !important;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 8px !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+.stSelectbox > div > div:focus-within, .stTextInput > div > div > input:focus {
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Fix Streamlit Sliders & Labels for Light Executive Theme */
+div[data-testid="stWidgetLabel"],
+div[data-testid="stWidgetLabel"] *,
+label[data-testid="stWidgetLabel"],
+label[data-testid="stWidgetLabel"] * {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+div[data-testid="stSlider"],
+div[data-testid="stSlider"] * {
+    color: #0f172a !important;
+}
+
+div[data-baseweb="slider"] div[role="slider"] {
+    background-color: #0f172a !important;
+    border: 2.5px solid #000000 !important;
+    box-shadow: none !important;
+}
+
+div[data-baseweb="slider"] div[data-testid="stTickBar"] + div,
+div[data-baseweb="slider"] > div > div {
+    background-color: #0f172a !important;
+}
+
+div[data-testid="stSlider"] div[data-testid="stTickBar"] + div span {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 4px;
+}
+</style>
+"""
