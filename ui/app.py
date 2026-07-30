@@ -557,7 +557,10 @@ with main_col:
 
                 with col_c:
                     if st.button("Remove", key=f"del_doc_{idx}", use_container_width=True):
-                        st.session_state.source_manager.remove_document(doc.get("doc_id"))
+                        doc_id = doc.get("doc_id")
+                        st.session_state.source_manager.remove_document(doc_id)
+                        if vdb_manager and doc_id:
+                            vdb_manager.delete_document_by_id(doc_id)
                         st.rerun()
         else:
             st.markdown(
