@@ -594,18 +594,40 @@ with main_col:
     # ═══════════════════════════════════════════════════════════════════════════
     elif active_page == "Performance":
         st.markdown('<div class="welcome-title">Performance</div><div class="welcome-subtitle">Telemetry & Grounding metrics history.</div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
         logs = st.session_state.perf_monitor.load_logs()
         if logs:
             df_logs = pd.DataFrame(logs)
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Total Queries", len(df_logs))
-            m2.metric("Mean Latency", f"{df_logs['total_latency_ms'].mean():.0f} ms")
-            m3.metric("Avg GCI", f"{df_logs['grounding_confidence_index'].mean()*100:.1f}%")
-            m4.metric("Avg Distance", f"{df_logs['avg_distance_score'].mean():.4f}")
+            avg_lat = df_logs['total_latency_ms'].mean()
+            avg_gci = df_logs['grounding_confidence_index'].mean() * 100
+            avg_dist = df_logs['avg_distance_score'].mean()
 
-            st.markdown("---")
+            st.markdown(
+                f"""
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;">
+                    <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 0.72rem; color: #475569; font-weight: 800; text-transform: uppercase;">Total Queries</div>
+                        <div style="font-size: 1.40rem; font-weight: 900; color: #0f172a; margin-top: 2px;">{len(df_logs)}</div>
+                    </div>
+                    <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 0.72rem; color: #475569; font-weight: 800; text-transform: uppercase;">Mean Latency</div>
+                        <div style="font-size: 1.40rem; font-weight: 900; color: #0f172a; margin-top: 2px;">{avg_lat:.0f} ms</div>
+                    </div>
+                    <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 0.72rem; color: #475569; font-weight: 800; text-transform: uppercase;">Avg GCI</div>
+                        <div style="font-size: 1.40rem; font-weight: 900; color: #0f172a; margin-top: 2px;">{avg_gci:.1f}%</div>
+                    </div>
+                    <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 0.72rem; color: #475569; font-weight: 800; text-transform: uppercase;">Avg Distance</div>
+                        <div style="font-size: 1.40rem; font-weight: 900; color: #0f172a; margin-top: 2px;">{avg_dist:.4f}</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
             c1, c2 = st.columns(2)
+
             with c1:
                 st.markdown("**Latency Breakdown**")
                 fig_lat = px.bar(
