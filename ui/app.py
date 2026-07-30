@@ -661,6 +661,33 @@ with main_col:
         st.markdown('<div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; color: #0f172a; font-weight: 800; font-size: 0.88rem; margin-top: 16px;">✓ Settings active and saved.</div>', unsafe_allow_html=True)
 
 
+def create_svg_sparkline(y_values, width=240, height=60):
+    if not y_values:
+        return ""
+    min_y, max_y = 0, 100
+    n = len(y_values)
+    if n == 1:
+        y_values = [y_values[0], y_values[0]]
+        n = 2
+    points = []
+    for i, val in enumerate(y_values):
+        x = (i / max(1, n - 1)) * width
+        y = height - ((val - min_y) / max(1, max_y - min_y)) * (height - 8) - 4
+        points.append((x, y))
+
+    path_d = f"M {points[0][0]:.1f},{points[0][1]:.1f} " + " ".join(f"L {px:.1f},{py:.1f}" for px, py in points[1:])
+    fill_d = f"{path_d} L {width:.1f},{height:.1f} L 0,{height:.1f} Z"
+    dots_html = "".join(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="3" fill="#2563eb" />' for px, py in points)
+
+    return f"""
+    <svg width="100%" height="{height}" viewBox="0 0 {width} {height}" preserveAspectRatio="none" style="display:block;margin-top:6px;">
+        <path d="{fill_d}" fill="rgba(37,99,235,0.12)" />
+        <path d="{path_d}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        {dots_html}
+    </svg>
+    """
+
+
 def create_svg_donut(values, colors, size=75, stroke_width=14):
     total = sum(values) or 1
     radius = (size - stroke_width) / 2
@@ -745,49 +772,22 @@ with right_col:
     )
 
     # 2. Retrieval Performance Chart
-    if logs and len(logs) >= 2:
-        df_spark = pd.DataFrame(logs[-10:])
-        fig_spark = go.Figure()
-        fig_spark.add_trace(go.Scatter(
-            y=df_spark["grounding_confidence_index"] * 100,
-            mode="lines+markers",
-            line=dict(color="#2563eb", width=2),
-            marker=dict(color="#2563eb", size=4),
-            fill="tozeroy",
-            fillcolor="rgba(37,99,235,0.1)",
-        ))
-        fig_spark.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=0, r=0, t=0, b=0),
-            height=100,
-            xaxis=dict(visible=False),
-            yaxis=dict(range=[0, 100], visible=False),
-            showlegend=False,
-        )
+    if logs and len(logs) >= 1:
+        y_vals = [float(l.get("grounding_confidence_index", 0)) * 100 for l in logs[-10:]]
+        svg_spark = create_svg_sparkline(y_vals)
         st.markdown(
-            f"""
-            <div class="panel-card">
-                <div class="panel-card-title">
-                    Retrieval Performance
-                    <span class="retrieval-avg-badge">{avg_gci:.1f}% Avg</span>
-                </div>
-            </div>
-            """,
+            f'<div class="panel-card">'
+            f'<div class="panel-card-title">Retrieval Performance<span class="retrieval-avg-badge">{avg_gci:.1f}% Avg</span></div>'
+            f'{svg_spark}'
+            f'</div>',
             unsafe_allow_html=True,
         )
-        st.plotly_chart(fig_spark, use_container_width=True, config={"displayModeBar": False})
     else:
         st.markdown(
-            f"""
-            <div class="panel-card">
-                <div class="panel-card-title">
-                    Retrieval Performance
-                    <span class="retrieval-avg-badge">{avg_gci:.1f}% Avg</span>
-                </div>
-                <div style="color:#64748b;font-size:0.78rem;text-align:center;padding:12px 0;">No telemetry data yet</div>
-            </div>
-            """,
+            f'<div class="panel-card">'
+            f'<div class="panel-card-title">Retrieval Performance<span class="retrieval-avg-badge">{avg_gci:.1f}% Avg</span></div>'
+            f'<div style="color:#64748b;font-size:0.78rem;text-align:center;padding:12px 0;">No telemetry data yet</div>'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
