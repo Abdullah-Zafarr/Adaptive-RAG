@@ -520,9 +520,10 @@ div[data-testid="column"] .prompt-btn div.stButton > button:hover {
     border: 2px solid #0f172a;
 }
 
-/* Main Action Buttons in Columns */
-div[data-testid="column"] div.stButton > button {
+/* Main Action Buttons in Main Content Area */
+div.stButton > button {
     background: #0f172a !important;
+    background-color: #0f172a !important;
     color: #ffffff !important;
     border: 2.5px solid #000000 !important;
     border-radius: 8px !important;
@@ -532,9 +533,28 @@ div[data-testid="column"] div.stButton > button {
     box-shadow: none !important;
 }
 
-div[data-testid="column"] div.stButton > button:hover {
+div.stButton > button *,
+div.stButton > button p,
+div.stButton > button span {
+    color: #ffffff !important;
+}
+
+div.stButton > button:hover,
+div.stButton > button:focus,
+div.stButton > button:active {
     background: #1e293b !important;
+    background-color: #1e293b !important;
+    color: #ffffff !important;
     border-color: #000000 !important;
+}
+
+div.stButton > button:hover *,
+div.stButton > button:focus *,
+div.stButton > button:active *,
+div.stButton > button:hover p,
+div.stButton > button:focus p,
+div.stButton > button:active p {
+    color: #ffffff !important;
 }
 
 /* Fix File Uploader Dropzone Container (Thick 2.5px Dashed Border) */
