@@ -36,7 +36,8 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K
+from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K, DEFAULT_DISTANCE_THRESHOLD
+
 from ingestion.source_manager import DataSourceManager
 from embeddings.manager import EmbeddingManager
 from vectordb.vector_store import VectorStoreManager
@@ -72,8 +73,9 @@ if "emb_model_key" not in st.session_state:
 if "top_k" not in st.session_state:
     st.session_state.top_k = DEFAULT_TOP_K
 if "distance_threshold" not in st.session_state:
-    st.session_state.distance_threshold = 1.5
+    st.session_state.distance_threshold = DEFAULT_DISTANCE_THRESHOLD
 if "search_type" not in st.session_state:
+
     st.session_state.search_type = "Similarity Search"
 if "chunk_size" not in st.session_state:
     st.session_state.chunk_size = DEFAULT_CHUNK_SIZE

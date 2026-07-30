@@ -14,9 +14,10 @@ def test_settings_tab_state_and_configuration():
     assert EMBEDDING_MODELS["all-MiniLM-L6-v2 (384d)"]["dimension"] == 384
 
     # 3. Verify Default Parameter Controls
-    assert DEFAULT_CHUNK_SIZE == 500
-    assert DEFAULT_CHUNK_OVERLAP == 50
-    assert DEFAULT_TOP_K == 4
+    assert DEFAULT_CHUNK_SIZE == 1000
+    assert DEFAULT_CHUNK_OVERLAP == 150
+    assert DEFAULT_TOP_K == 8
+
 
     # 4. Simulate Settings Page State Mutations
     simulated_session_state = {
