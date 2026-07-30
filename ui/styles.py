@@ -630,7 +630,7 @@ div.stButton > button:active p {
 /* Fix File Uploader Dropzone Container (Matching Height & Color) */
 div[data-testid="stFileUploader"] {
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 0 10px 0 !important;
 }
 
 div[data-testid="stFileUploaderDropzone"],
@@ -673,7 +673,7 @@ section[data-testid="stFileUploaderDropzone"] button * {
     color: #ffffff !important;
 }
 
-/* Uploaded File Chip Container (Thick 2.5px Solid Border & White Background) */
+/* Uploaded File Chip Container */
 div[data-testid="stFileUploaderFileData"],
 [data-testid="stFileUploaderFileData"],
 div[data-testid="stFileUploader"] section + ul li,
@@ -703,7 +703,7 @@ div[data-testid="stFileUploaderFileData"] button,
     border-radius: 6px !important;
 }
 
-/* Fix Chat Input Textarea (Slight Tint Background) */
+/* Fix Chat Input Textarea */
 [data-testid="stChatInput"],
 [data-testid="stChatInput"] *,
 [data-testid="stChatInput"] > div,
@@ -725,7 +725,11 @@ div[data-testid="stFileUploaderFileData"] button,
 }
 
 /* Fix Text Inputs (Web Endpoint Ingest Input Box - Exact Match to Dropzone) */
-div[data-testid="stTextInput"],
+div[data-testid="stTextInput"] {
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
+}
+
 div[data-testid="stTextInput"] > div,
 div[data-testid="stTextInput"] div[data-baseweb="base-input"],
 div[data-testid="stTextInput"] div[data-baseweb="input"] {
@@ -768,6 +772,7 @@ div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
 div[data-testid="stTextInput"] input::placeholder {
     color: #64748b !important;
 }
+
 
 
 /* Inputs & Selectboxes (High Contrast Executive Theme) */
