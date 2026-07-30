@@ -15,20 +15,21 @@ html, body, [class*="css"] {
     background-color: #f8fafc !important;
 }
 
-/* Remove default Streamlit padding */
+/* Adjust block container top padding so toggle button never overlaps page content */
 .block-container {
-    padding: 1rem 1.5rem 1rem 1.5rem !important;
+    padding: 3rem 1.5rem 1rem 1.5rem !important;
     max-width: 100% !important;
 }
 
-/* Hide default Streamlit header elements except top-left sidebar toggle */
+/* Position native top-left sidebar toggle button cleanly in top bar */
 #MainMenu, footer { display: none !important; }
-header {
+header[data-testid="stHeader"] {
     background: transparent !important;
     height: 3rem !important;
     z-index: 99999 !important;
 }
 .stDeployButton { display: none !important; }
+
 
 /* Styled High-Contrast Black Sidebar Toggle Button (Expand / Collapse) */
 button[data-testid="stSidebarCollapseButton"],
