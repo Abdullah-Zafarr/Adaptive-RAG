@@ -1,0 +1,839 @@
+import os
+import sys
+import datetime
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+
+# Ensure src path is accessible
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from src.config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K
+from src.ingestion.source_manager import DataSourceManager
+from src.embeddings.manager import EmbeddingManager
+from src.vectordb.vector_store import VectorStoreManager
+from src.generator.retriever import RetrieverTool
+from src.generator.llm import LLMResponseGenerator
+from src.evaluation.performance_monitor import PerformanceMonitor
+from src.ui.styles import CUSTOM_CSS
+
+# ─── Page Config ───────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Adaptive RAG — Knowledge Assistant",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+# ─── Session State ─────────────────────────────────────────────────────────────
+if "source_manager" not in st.session_state:
+    st.session_state.source_manager = DataSourceManager()
+if "perf_monitor" not in st.session_state:
+    st.session_state.perf_monitor = PerformanceMonitor()
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+if "llm_model" not in st.session_state:
+    st.session_state.llm_model = DEFAULT_GROQ_MODEL
+if "emb_model_key" not in st.session_state:
+    st.session_state.emb_model_key = list(EMBEDDING_MODELS.keys())[0]
+if "top_k" not in st.session_state:
+    st.session_state.top_k = DEFAULT_TOP_K
+if "distance_threshold" not in st.session_state:
+    st.session_state.distance_threshold = 1.5
+if "search_type" not in st.session_state:
+    st.session_state.search_type = "Similarity Search"
+if "chunk_size" not in st.session_state:
+    st.session_state.chunk_size = DEFAULT_CHUNK_SIZE
+if "chunk_overlap" not in st.session_state:
+    st.session_state.chunk_overlap = DEFAULT_CHUNK_OVERLAP
+
+groq_key = os.getenv("GROQ_API_KEY", "")
+
+# ─── Engine Initialization ─────────────────────────────────────────────────────
+@st.cache_resource(show_spinner=False)
+def get_engine(emb_key):
+    emb_inst = EmbeddingManager.get_embedding_model(emb_key)
+    vdb = VectorStoreManager(embedding_model=emb_inst)
+    return emb_inst, vdb
+
+try:
+    embedding_inst, vdb_manager = get_engine(st.session_state.emb_model_key)
+    retriever_tool = RetrieverTool(vdb_manager) if vdb_manager else None
+except Exception as e:
+    vdb_manager = None
+    retriever_tool = None
+
+# ─── Helpers & Vector Icons ────────────────────────────────────────────────────
+def fmt_size(b):
+    if b < 1024:
+        return f"{b} B"
+    elif b < 1024 * 1024:
+        return f"{b/1024:.0f} KB"
+    else:
+        return f"{b/(1024*1024):.1f} MB"
+
+def get_active_docs():
+    return st.session_state.source_manager.get_active_documents()
+
+# Clean Vector SVG Icons
+LOGO_ICON_SVG = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>"""
+
+GROQ_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#f97316" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+
+CHROMA_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9" fill="url(#chromaGrad)"/><defs><linearGradient id="chromaGrad" x1="3" y1="3" x2="21" y2="21"><stop offset="0%" stop-color="#ff4b4b"/><stop offset="50%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs></svg>"""
+
+HF_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><rect width="20" height="20" x="2" y="2" rx="5" fill="#0f172a"/><path d="M8 12h8M12 8v8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>"""
+
+AI_SPARK_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M12 2v20M2 12h20M17 7l-10 10M7 7l10 10"/></svg>"""
+
+GCI_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><rect width="20" height="20" x="2" y="2" rx="5" fill="#6366f1"/><path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+
+NAV_ITEMS = [
+    ("Chat Assistant", "chat"),
+    ("Documents", "docs"),
+    ("Data Sources", "sources"),
+    ("Performance", "perf"),
+    ("Settings", "settings"),
+]
+
+SUGGESTED_PROMPTS = [
+    "How RAG Works",
+    "Vector Embeddings",
+    "Pinecone vs Chroma",
+    "Grounding Score",
+]
+
+SOURCE_COLORS = ["#7c3aed", "#06b6d4", "#818cf8", "#f59e0b", "#94a3b8"]
+
+# ─── LEFT SIDEBAR ──────────────────────────────────────────────────────────────
+with st.sidebar:
+    # App Logo
+    st.markdown(
+        f"""
+        <div class="app-logo">
+            <div class="app-logo-icon">{LOGO_ICON_SVG}</div>
+            <div class="app-logo-text">
+                <div class="app-logo-name">Adaptive RAG</div>
+                <div class="app-logo-sub">Knowledge Assistant</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Navigation Menu
+    if "active_page" not in st.session_state:
+        st.session_state.active_page = "Chat Assistant"
+
+    for label, key_id in NAV_ITEMS:
+        is_active = (st.session_state.active_page == label)
+        if is_active:
+            st.markdown('<div class="nav-active-wrap">', unsafe_allow_html=True)
+        if st.button(label, key=f"sidebar_nav_{key_id}", use_container_width=True):
+            st.session_state.active_page = label
+            st.rerun()
+        if is_active:
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    active_page = st.session_state.active_page
+
+    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+
+    # Active Data Sources list
+    active_docs = get_active_docs()
+    count = len(active_docs)
+    st.markdown(
+        f'<div class="sidebar-section-title">ACTIVE DATA SOURCES <span class="source-badge">{count}</span></div>',
+        unsafe_allow_html=True,
+    )
+
+    if active_docs:
+        for doc in active_docs[:4]:
+            fname = doc.get("filename", "Unknown")
+            fsize = fmt_size(doc.get("file_size", 0))
+            chunks = doc.get("total_chunks", 0)
+            ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else "file"
+            icon_cls = "txt" if ext in ("txt", "md") else ""
+            icon_label = ext.upper()[:3]
+            st.markdown(
+                f"""
+                <div class="doc-item">
+                    <div class="doc-icon {icon_cls}">{icon_label}</div>
+                    <div class="doc-details">
+                        <div class="doc-name" title="{fname}">{fname}</div>
+                        <div class="doc-meta">{ext.upper()} • {fsize} • {chunks} chunks</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+    else:
+        st.markdown(
+            '<div style="padding: 6px 10px; font-size: 0.78rem; color: #475569;">No documents added yet.</div>',
+            unsafe_allow_html=True,
+        )
+
+    # Add Document button
+    if st.button("＋ Add Document", key="add_doc_sidebar_btn", use_container_width=True):
+        st.session_state.active_page = "Data Sources"
+        st.rerun()
+
+# ─── MAIN AREA & RIGHT PANEL LAYOUT ───────────────────────────────────────────
+main_col, right_col = st.columns([3, 1.1], gap="medium")
+
+with main_col:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PAGE: CHAT ASSISTANT
+    # ═══════════════════════════════════════════════════════════════════════════
+    if active_page == "Chat Assistant":
+        # Full-Width Title Header Line
+        st.markdown(
+            '<div class="welcome-title">Welcome back, Abdullah!</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+        # Row Below Full Line: Subtitle on Left, Model Select Dropdown on Right
+        sub_l, sub_r = st.columns([2.8, 1.2], vertical_alignment="center")
+        with sub_l:
+            st.markdown(
+                '<div class="welcome-subtitle">Ask anything from your knowledge base. I\'ll search, think, and answer.</div>',
+                unsafe_allow_html=True,
+            )
+        with sub_r:
+            selected_model = st.selectbox(
+                "Model",
+                options=GROQ_MODELS,
+                index=GROQ_MODELS.index(st.session_state.llm_model) if st.session_state.llm_model in GROQ_MODELS else 0,
+                key="model_select_hdr",
+                label_visibility="collapsed",
+            )
+            st.session_state.llm_model = selected_model
+
+        st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+
+        # ── Chat Messages Stream ──
+        for message in st.session_state.chat_history:
+            if message["role"] == "user":
+                now_str = datetime.datetime.now().strftime("%I:%M %p").lstrip("0")
+                st.markdown(
+                    f"""
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+                        <div style="background:#eff6ff;border:1px solid #dbeafe;color:#1e3a8a;padding:10px 16px;border-radius:14px 14px 2px 14px;max-width:70%;font-size:0.90rem;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                            {message["content"]}
+                            <div style="font-size:0.68rem;color:#64748b;text-align:right;margin-top:4px;">{now_str}</div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                sources_html = ""
+                if message.get("sources"):
+                    sources_html = '<div class="source-pills-row"><span>Sources:</span>'
+                    for src in message["sources"][:2]:
+                        sources_html += f'<span class="source-pill">{src["filename"]} (p.{src["page"]})</span>'
+                    if len(message["sources"]) > 2:
+                        sources_html += f'<span style="color:#0f172a;font-size:0.75rem;font-weight:700;">+ {len(message["sources"])-2} more</span>'
+                    sources_html += "</div>"
+
+                metrics_html = ""
+                if message.get("metrics"):
+                    m = message["metrics"]
+                    gci = int(m.get("grounding_confidence_index", 0) * 100)
+                    latency = m.get("total_latency_ms", 0)
+                    metrics_html = f"""
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+                        <span style="color:#0f172a;font-size:0.75rem;font-weight:700;">{gci}% Relevant</span>
+                        <span style="color:#475569;font-size:0.75rem;">Latency: {latency:.2f}ms</span>
+                    </div>
+                    """
+
+                st.markdown(
+                    f"""
+                    <div class="ai-message-card">
+                        <div class="ai-icon">{AI_SPARK_SVG}</div>
+                        <div class="ai-content">{message["content"]}</div>
+                        {sources_html}
+                        {metrics_html}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        # ── Feature Workbench Grid (Fills empty space when chat history is empty) ──
+        if not st.session_state.chat_history:
+            st.markdown(
+                f"""
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">{GROQ_LOGO_SVG} Groq Llama-3.3 70B Engine</div>
+                        <div class="feature-desc">Sub-second grounded inference powered by Groq's high-speed LPU architecture.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">{CHROMA_LOGO_SVG} ChromaDB Vector Index</div>
+                        <div class="feature-desc">Persistent document chunk vector store with dynamic similarity distance filtering.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">{HF_LOGO_SVG} HuggingFace Embeddings</div>
+                        <div class="feature-desc">384d & 768d dense semantic vectorizers running locally with zero latency.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">{GCI_LOGO_SVG} Grounding Confidence Index (GCI)</div>
+                        <div class="feature-desc">Automated hallucination auditing and contextual verification telemetry.</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # Clean even vertical spacing above suggested prompts
+            st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+
+            # ── Suggested Prompts Row ──
+            sp_cols = st.columns([1, 1, 1, 1])
+            for i, p_text in enumerate(SUGGESTED_PROMPTS):
+                with sp_cols[i]:
+                    st.markdown('<div class="prompt-btn">', unsafe_allow_html=True)
+                    if st.button(p_text, key=f"sp_btn_{i}"):
+                        st.session_state._pending_query = p_text
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+        # ── Chat Input Bar ──
+        query = st.chat_input("Ask a question about your documents...", key="main_chat_input")
+        if hasattr(st.session_state, "_pending_query") and st.session_state._pending_query:
+            query = st.session_state._pending_query
+            del st.session_state._pending_query
+
+        if query:
+            st.session_state.chat_history.append({"role": "user", "content": query})
+            active_docs = get_active_docs()
+
+            if not active_docs:
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": "Knowledge base is currently empty. Please upload or index documents in the Data Sources tab.",
+                    "sources": [],
+                    "metrics": {}
+                })
+                st.rerun()
+            elif retriever_tool is None:
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": "Engine components are uninitialized.",
+                    "sources": [],
+                    "metrics": {}
+                })
+                st.rerun()
+            else:
+                with st.spinner("Searching knowledge base..."):
+                    retrieved_items, formatted_context, retrieval_time, comp_stats = retriever_tool.retrieve(
+                        query,
+                        top_k=st.session_state.top_k,
+                        search_type=st.session_state.search_type,
+                        distance_threshold=st.session_state.distance_threshold,
+                    )
+
+                with st.spinner("Generating response..."):
+                    try:
+                        answer_text, gen_time = LLMResponseGenerator.generate_response(
+                            model_name=st.session_state.llm_model,
+                            query=query,
+                            context=formatted_context,
+                            api_key=groq_key,
+                        )
+                        log_entry = st.session_state.perf_monitor.log_query_event(
+                            query=query,
+                            response=answer_text,
+                            retrieved_chunks=retrieved_items,
+                            retrieval_time_ms=retrieval_time,
+                            gen_time_ms=gen_time,
+                            embedding_model=st.session_state.emb_model_key,
+                            llm_model=st.session_state.llm_model,
+                            active_doc_count=len(active_docs),
+                            compression_stats=comp_stats,
+                        )
+                        st.session_state.chat_history.append({
+                            "role": "assistant",
+                            "content": answer_text,
+                            "sources": retrieved_items,
+                            "metrics": log_entry,
+                        })
+                    except Exception as e:
+                        st.session_state.chat_history.append({
+                            "role": "assistant",
+                            "content": f"Error: {e}",
+                            "sources": [],
+                            "metrics": {}
+                        })
+                st.rerun()
+
+        # Footer
+        st.markdown(
+            f"""
+            <div class="app-footer">
+                <span>{GROQ_LOGO_SVG} Powered by Groq</span>
+                <span>•</span>
+                <span>{CHROMA_LOGO_SVG} ChromaDB Engine</span>
+                <span>•</span>
+                <span>{len(get_active_docs())} Active Sources</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PAGE: DOCUMENTS
+    # ═══════════════════════════════════════════════════════════════════════════
+    elif active_page == "Documents":
+        st.markdown('<div class="welcome-title">Documents</div><div class="welcome-subtitle">Registry of active indexed documents.</div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        active_docs = get_active_docs()
+        if active_docs:
+            df = pd.DataFrame(active_docs)[["doc_id", "filename", "total_chunks", "file_size", "chunk_size", "chunk_overlap"]]
+            df["file_size"] = df["file_size"].apply(fmt_size)
+            st.dataframe(df, use_container_width=True)
+
+            st.markdown("---")
+            col_sel, col_btn = st.columns([3, 1])
+            with col_sel:
+                doc_to_delete = st.selectbox(
+                    "Target Document",
+                    options=[d["doc_id"] for d in active_docs],
+                    format_func=lambda x: next(d["filename"] for d in active_docs if d["doc_id"] == x),
+                    label_visibility="collapsed",
+                )
+            with col_btn:
+                if st.button("Delete Document", use_container_width=True):
+                    deleted_info = st.session_state.source_manager.remove_document(doc_to_delete)
+                    if deleted_info and vdb_manager:
+                        vdb_manager.delete_document_by_id(doc_to_delete)
+                    st.success("Document deleted.")
+                    st.rerun()
+
+            if st.button("Clear All Documents"):
+                st.session_state.source_manager.clear_all()
+                if vdb_manager:
+                    vdb_manager.reset_db()
+                st.success("All documents cleared.")
+                st.rerun()
+        else:
+            st.info("No documents currently indexed.")
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PAGE: DATA SOURCES
+    # ═══════════════════════════════════════════════════════════════════════════
+    elif active_page == "Data Sources":
+        st.markdown('<div class="welcome-title">Data Sources</div><div class="welcome-subtitle">Upload files or index web pages.</div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown('<div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; margin-bottom: 8px;">Upload Documents</div>', unsafe_allow_html=True)
+            uploaded_files = st.file_uploader(
+                "Files",
+                type=["pdf", "txt", "docx"],
+                accept_multiple_files=True,
+                label_visibility="collapsed",
+            )
+            if st.button("Process & Index Files", use_container_width=True):
+                if uploaded_files:
+                    for file in uploaded_files:
+                        with st.spinner(f"Processing {file.name}..."):
+                            file_bytes = file.read()
+                            doc_info, chunks = st.session_state.source_manager.add_file(
+                                file_name=file.name,
+                                file_bytes=file_bytes,
+                                chunk_size=st.session_state.chunk_size,
+                                chunk_overlap=st.session_state.chunk_overlap,
+                            )
+                            if vdb_manager:
+                                vdb_manager.add_documents(chunks)
+                        st.success(f"Indexed {file.name}")
+                    st.rerun()
+                else:
+                    st.info("Select files to upload.")
+
+        with c2:
+            st.markdown('<div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; margin-bottom: 8px;">Web Endpoint Ingest</div>', unsafe_allow_html=True)
+            web_url = st.text_input("URL", placeholder="https://example.com/doc", label_visibility="collapsed")
+            if st.button("Index Web Endpoint", use_container_width=True):
+                if web_url.strip():
+                    with st.spinner("Fetching URL..."):
+                        try:
+                            doc_info, chunks = st.session_state.source_manager.add_url(
+                                url=web_url,
+                                chunk_size=st.session_state.chunk_size,
+                                chunk_overlap=st.session_state.chunk_overlap,
+                            )
+                            if vdb_manager:
+                                vdb_manager.add_documents(chunks)
+                            st.success("Indexed URL.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                else:
+                    st.info("Enter a URL.")
+
+        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+        st.markdown('<div style="font-weight: 800; font-size: 1.00rem; color: #0f172a; padding-bottom: 6px; border-bottom: 2.5px solid #0f172a; margin-bottom: 12px;">Active Knowledge Repository</div>', unsafe_allow_html=True)
+
+        active_docs = get_active_docs()
+        if active_docs:
+            for idx, doc in enumerate(active_docs):
+                fname = doc.get("filename", "Unknown")
+                fsize = fmt_size(doc.get("file_size", 0))
+                chunks = doc.get("total_chunks", 0)
+                added_at = doc.get("added_at", "Just now")
+                ext = fname.rsplit(".", 1)[-1].upper() if "." in fname else "FILE"
+
+                col_a, col_b, col_c = st.columns([3, 1.5, 0.8])
+                with col_a:
+                    st.markdown(
+                        f"""
+                        <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px;">
+                            <div style="background: #0f172a; color: #ffffff; font-weight: 800; font-size: 0.72rem; padding: 4px 8px; border-radius: 4px;">{ext}</div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">{fname}</div>
+                                <div style="font-size: 0.72rem; color: #475569;">Ingested {added_at} • {fsize}</div>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                with col_b:
+                    st.markdown(
+                        f"""
+                        <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; text-align: center;">
+                            <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">{chunks} Chunks</div>
+                            <div style="font-size: 0.72rem; color: #475569;">Indexed Vectors</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                with col_c:
+                    if st.button("Remove", key=f"del_doc_{idx}", use_container_width=True):
+                        st.session_state.source_manager.remove_document(doc.get("doc_id"))
+                        st.rerun()
+        else:
+            st.markdown(
+                """
+                <div style="background: #f1f5f9; border: 2.5px dashed #0f172a; border-radius: 10px; padding: 20px; text-align: center; color: #475569; margin-bottom: 16px;">
+                    <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">No Active Documents Ingested</div>
+                    <div style="font-size: 0.82rem;">Upload PDF, DOCX, TXT files or index a web URL above to populate your vector store.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+        st.markdown('<div style="font-weight: 800; font-size: 1.00rem; color: #0f172a; padding-bottom: 6px; border-bottom: 2.5px solid #0f172a; margin-bottom: 12px;">Ingestion Pipeline Specifications</div>', unsafe_allow_html=True)
+
+        ig1, ig2, ig3 = st.columns(3)
+        with ig1:
+            st.markdown(
+                """
+                <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 10px; padding: 14px; height: 105px; min-height: 105px; box-sizing: border-box;">
+                    <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a; margin-bottom: 6px;">📄 Multi-Format Extractors</div>
+                    <div style="font-size: 0.78rem; color: #334155; line-height: 1.40;">Layout parsing for PDF, DOCX, TXT, and web endpoints via BeautifulSoup.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with ig2:
+            st.markdown(
+                """
+                <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 10px; padding: 14px; height: 105px; min-height: 105px; box-sizing: border-box;">
+                    <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a; margin-bottom: 6px;">⚡ Dynamic Chunking Engine</div>
+                    <div style="font-size: 0.78rem; color: #334155; line-height: 1.40;">Recursive text splitting with configurable overlap to preserve context.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with ig3:
+            st.markdown(
+                """
+                <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 10px; padding: 14px; height: 105px; min-height: 105px; box-sizing: border-box;">
+                    <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a; margin-bottom: 6px;">🗄️ ChromaDB Persistence</div>
+                    <div style="font-size: 0.78rem; color: #334155; line-height: 1.40;">Local dense vector store with distance filtering for fast retrieval.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PAGE: PERFORMANCE
+    # ═══════════════════════════════════════════════════════════════════════════
+    elif active_page == "Performance":
+        st.markdown('<div class="welcome-title">Performance</div><div class="welcome-subtitle">Telemetry & Grounding metrics history.</div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        logs = st.session_state.perf_monitor.load_logs()
+        if logs:
+            df_logs = pd.DataFrame(logs)
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Total Queries", len(df_logs))
+            m2.metric("Mean Latency", f"{df_logs['total_latency_ms'].mean():.0f} ms")
+            m3.metric("Avg GCI", f"{df_logs['grounding_confidence_index'].mean()*100:.1f}%")
+            m4.metric("Avg Distance", f"{df_logs['avg_distance_score'].mean():.4f}")
+
+            st.markdown("---")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown("**Latency Breakdown**")
+                fig_lat = px.bar(
+                    df_logs, x="query_id",
+                    y=["retrieval_latency_ms", "generation_latency_ms"],
+                    barmode="stack", template="plotly_dark",
+                    color_discrete_sequence=["#7c3aed", "#06b6d4"],
+                )
+                fig_lat.update_layout(paper_bgcolor="#090d16", plot_bgcolor="#0d121f")
+                st.plotly_chart(fig_lat, use_container_width=True)
+            with c2:
+                st.markdown("**GCI Score History**")
+                fig_gci = px.line(
+                    df_logs, x="query_id",
+                    y=["grounding_confidence_index", "lexical_overlap_ratio"],
+                    markers=True, template="plotly_dark",
+                    color_discrete_sequence=["#7c3aed", "#818cf8"],
+                )
+                fig_gci.update_layout(paper_bgcolor="#090d16", plot_bgcolor="#0d121f")
+                st.plotly_chart(fig_gci, use_container_width=True)
+        else:
+            st.info("No telemetry logs recorded yet.")
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PAGE: SETTINGS
+    # ═══════════════════════════════════════════════════════════════════════════
+    elif active_page == "Settings":
+        st.markdown('<div class="welcome-title">Settings</div><div class="welcome-subtitle">Configure model parameters and retrieval options.</div>', unsafe_allow_html=True)
+        st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+
+        st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-bottom: 4px;">LLM Inference Engine</div>', unsafe_allow_html=True)
+        st.session_state.llm_model = st.selectbox("LLM Inference Engine", GROQ_MODELS, index=GROQ_MODELS.index(st.session_state.llm_model), label_visibility="collapsed")
+
+        st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-top: 14px; margin-bottom: 4px;">Embedding Model</div>', unsafe_allow_html=True)
+        emb_keys = list(EMBEDDING_MODELS.keys())
+        st.session_state.emb_model_key = st.selectbox("Embedding Model", emb_keys, index=emb_keys.index(st.session_state.emb_model_key), label_visibility="collapsed")
+
+        st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-top: 14px; margin-bottom: 4px;">Top-K Retrieval Nodes</div>', unsafe_allow_html=True)
+        st.session_state.top_k = st.slider("Top-K Retrieval Nodes", 1, 10, st.session_state.top_k, label_visibility="collapsed")
+
+        st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-top: 14px; margin-bottom: 4px;">Max Similarity Distance</div>', unsafe_allow_html=True)
+        st.session_state.distance_threshold = st.slider("Max Similarity Distance", 0.2, 2.0, st.session_state.distance_threshold, step=0.1, label_visibility="collapsed")
+
+        st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-top: 14px; margin-bottom: 4px;">Chunk Size</div>', unsafe_allow_html=True)
+        st.session_state.chunk_size = st.slider("Chunk Size", 100, 2000, st.session_state.chunk_size, step=50, label_visibility="collapsed")
+
+        st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-top: 14px; margin-bottom: 4px;">Chunk Overlap</div>', unsafe_allow_html=True)
+        st.session_state.chunk_overlap = st.slider("Chunk Overlap", 0, 400, st.session_state.chunk_overlap, step=10, label_visibility="collapsed")
+        
+        st.markdown('<div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; color: #0f172a; font-weight: 800; font-size: 0.88rem; margin-top: 16px;">✓ Settings active and saved.</div>', unsafe_allow_html=True)
+
+
+def create_svg_donut(values, colors, size=75, stroke_width=14):
+    total = sum(values) or 1
+    radius = (size - stroke_width) / 2
+    circumference = 2 * 3.14159265 * radius
+    cx = cy = size / 2
+
+    if len(values) == 1:
+        color = colors[0]
+        return f"""
+        <svg width="{size}" height="{size}" viewBox="0 0 {size} {size}" style="display:block;margin:6px auto 2px auto;">
+            <circle cx="{cx}" cy="{cy}" r="{radius}" fill="none" stroke="{color}" stroke-width="{stroke_width}" />
+        </svg>
+        """
+
+    accum_pct = 0.0
+    segments_html = []
+    for val, color in zip(values, colors):
+        pct = val / total
+        dash_len = pct * circumference
+        gap_len = circumference - dash_len
+        offset = -(accum_pct * circumference)
+        segments_html.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{radius}" fill="none" stroke="{color}" stroke-width="{stroke_width}" '
+            f'stroke-dasharray="{dash_len:.2f} {gap_len:.2f}" stroke-dashoffset="{offset:.2f}" transform="rotate(-90 {cx} {cy})" />'
+        )
+        accum_pct += pct
+
+    return f"""
+    <svg width="{size}" height="{size}" viewBox="0 0 {size} {size}" style="display:block;margin:6px auto 2px auto;">
+        {"".join(segments_html)}
+    </svg>
+    """
+
+# ─── RIGHT PANEL — Analytics Overview & System Telemetry ───────────────────────
+with right_col:
+    logs = st.session_state.perf_monitor.load_logs()
+    total_queries = len(logs)
+    if logs:
+        df_logs = pd.DataFrame(logs)
+        avg_latency_s = df_logs["total_latency_ms"].mean() / 1000
+        avg_gci = df_logs["grounding_confidence_index"].mean() * 100
+        high_risk_count = len(df_logs[df_logs["hallucination_risk"] == "HIGH_RISK"])
+        hallucination_rate = (high_risk_count / total_queries * 100) if total_queries else 0
+    else:
+        avg_latency_s = 0.0
+        avg_gci = 0.0
+        hallucination_rate = 0.0
+
+    # 1. Performance Overview
+    st.markdown(
+        f"""
+        <div class="panel-card">
+            <div class="panel-card-title">
+                Performance Overview
+                <span class="panel-time-badge">Past 7 Days ∨</span>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-tile t-queries">
+                    <div class="metric-label">Total Queries</div>
+                    <div class="metric-value">{total_queries}</div>
+                    <div class="metric-delta">✦ Active</div>
+                </div>
+                <div class="metric-tile t-latency">
+                    <div class="metric-label">Avg. Response Time</div>
+                    <div class="metric-value">{avg_latency_s:.2f}s</div>
+                    <div class="metric-delta"> Target &lt;3s</div>
+                </div>
+                <div class="metric-tile t-accuracy">
+                    <div class="metric-label">Retrieval Accuracy</div>
+                    <div class="metric-value">{avg_gci:.1f}%</div>
+                    <div class="metric-delta">✦ GCI Score</div>
+                </div>
+                <div class="metric-tile t-risk">
+                    <div class="metric-label">Hallucination Rate</div>
+                    <div class="metric-value">{hallucination_rate:.1f}%</div>
+                    <div class="metric-delta">✦ Low Risk</div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 2. Retrieval Performance Chart
+    if logs and len(logs) >= 2:
+        df_spark = pd.DataFrame(logs[-10:])
+        fig_spark = go.Figure()
+        fig_spark.add_trace(go.Scatter(
+            y=df_spark["grounding_confidence_index"] * 100,
+            mode="lines+markers",
+            line=dict(color="#2563eb", width=2),
+            marker=dict(color="#2563eb", size=4),
+            fill="tozeroy",
+            fillcolor="rgba(37,99,235,0.1)",
+        ))
+        fig_spark.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=100,
+            xaxis=dict(visible=False),
+            yaxis=dict(range=[0, 100], visible=False),
+            showlegend=False,
+        )
+        st.markdown(
+            f"""
+            <div class="panel-card">
+                <div class="panel-card-title">
+                    Retrieval Performance
+                    <span class="retrieval-avg-badge">{avg_gci:.1f}% Avg</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.plotly_chart(fig_spark, use_container_width=True, config={"displayModeBar": False})
+    else:
+        st.markdown(
+            f"""
+            <div class="panel-card">
+                <div class="panel-card-title">
+                    Retrieval Performance
+                    <span class="retrieval-avg-badge">{avg_gci:.1f}% Avg</span>
+                </div>
+                <div style="color:#64748b;font-size:0.78rem;text-align:center;padding:12px 0;">No telemetry data yet</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # 3. Top Retrieved Sources
+    active_docs = get_active_docs()
+    if active_docs:
+        total_chunks = sum(d.get("total_chunks", 1) for d in active_docs) or 1
+        donut_values, donut_colors = [], []
+        legend_rows_html = ""
+        for i, doc in enumerate(active_docs[:4]):
+            fname = doc.get("filename", "Unknown")
+            chunks = doc.get("total_chunks", 0)
+            pct = round(chunks / total_chunks * 100)
+            color = SOURCE_COLORS[i % len(SOURCE_COLORS)]
+            donut_values.append(chunks)
+            donut_colors.append(color)
+            legend_rows_html += (
+                f'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:0.78rem;">'
+                f'<div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">'
+                f'<div style="width:8px;height:8px;border-radius:50%;background:{color};flex-shrink:0;"></div>'
+                f'<span style="color:#0f172a;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{fname}">{fname}</span>'
+                f'</div>'
+                f'<span style="color:#334155;font-weight:800;font-size:0.78rem;margin-left:8px;flex-shrink:0;">{pct}%</span>'
+                f'</div>'
+            )
+
+        svg_donut = create_svg_donut(donut_values, donut_colors)
+
+        st.markdown(
+            f'<div class="panel-card"><div class="panel-card-title">Top Retrieved Sources</div>{legend_rows_html}{svg_donut}</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <div class="panel-card">
+                <div class="panel-card-title">Top Retrieved Sources</div>
+                <div style="color:#64748b;font-size:0.78rem;text-align:center;padding:8px 0;">No documents indexed.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # 4. System Status
+    vdb_status = "Healthy" if vdb_manager else "Offline"
+    llm_status = "Healthy" if groq_key else "No Key"
+    emb_status = "Healthy"
+
+    st.markdown(
+        f"""
+        <div class="panel-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <span class="panel-card-title" style="margin-bottom:0;border-bottom:none;">System Status</span>
+                <span class="all-operational">Operational</span>
+            </div>
+            <div class="status-grid">
+                <div class="status-tile">
+                    <div class="status-service">{CHROMA_LOGO_SVG} Vector DB</div>
+                    <div class="status-provider">ChromaDB</div>
+                    <div class="status-healthy">{vdb_status}</div>
+                </div>
+                <div class="status-tile">
+                    <div class="status-service">{GROQ_LOGO_SVG} LLM API</div>
+                    <div class="status-provider">Groq</div>
+                    <div class="status-healthy">{llm_status}</div>
+                </div>
+                <div class="status-tile">
+                    <div class="status-service">{HF_LOGO_SVG} Embeddings</div>
+                    <div class="status-provider">HuggingFace</div>
+                    <div class="status-healthy">{emb_status}</div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
