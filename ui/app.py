@@ -305,30 +305,16 @@ with main_col:
 
         # ── Feature Workbench Grid (Fills empty space when chat history is empty) ──
         if not st.session_state.chat_history:
-            st.markdown(
-                f"""
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-title">{GROQ_LOGO_SVG} Groq Llama-3.3 70B Engine</div>
-                        <div class="feature-desc">Sub-second grounded inference powered by Groq's high-speed LPU architecture.</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-title">{CHROMA_LOGO_SVG} Supabase Vector Index</div>
-                        <div class="feature-desc">Cloud PostgreSQL vector store powered by pgvector with dynamic similarity distance filtering.</div>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-title">{HF_LOGO_SVG} HuggingFace Embeddings</div>
-                        <div class="feature-desc">384d & 768d dense semantic vectorizers running locally with zero latency.</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-title">{GCI_LOGO_SVG} Grounding Confidence Index (GCI)</div>
-                        <div class="feature-desc">Automated hallucination auditing and contextual verification telemetry.</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
+            grid_html = (
+                f'<div class="feature-grid">'
+                f'<div class="feature-card"><div class="feature-title">{GROQ_LOGO_SVG} Groq Llama-3.3 70B Engine</div><div class="feature-desc">Sub-second grounded inference powered by Groq\'s high-speed LPU architecture.</div></div>'
+                f'<div class="feature-card"><div class="feature-title">{CHROMA_LOGO_SVG} Supabase Vector Index</div><div class="feature-desc">Cloud PostgreSQL vector store powered by pgvector with dynamic similarity distance filtering.</div></div>'
+                f'<div class="feature-card"><div class="feature-title">{HF_LOGO_SVG} HuggingFace Embeddings</div><div class="feature-desc">384d & 768d dense semantic vectorizers running locally with zero latency.</div></div>'
+                f'<div class="feature-card"><div class="feature-title">{GCI_LOGO_SVG} Grounding Confidence Index (GCI)</div><div class="feature-desc">Automated hallucination auditing and contextual verification telemetry.</div></div>'
+                f'</div>'
             )
+            st.markdown(grid_html, unsafe_allow_html=True)
+
 
             # Clean even vertical spacing above suggested prompts
             st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
