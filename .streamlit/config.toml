@@ -2,9 +2,7 @@
 headless = true
 enableCORS = false
 enableXsrfProtection = false
-
-[global]
-disableWatchdogWarning = true
+fileWatcherType = "none"
 
 [browser]
 gatherUsageStats = false
@@ -12,5 +10,3 @@ gatherUsageStats = false
 [runner]
 magicEnabled = false
 
-[server.fileWatcherType]
-type = "none"
