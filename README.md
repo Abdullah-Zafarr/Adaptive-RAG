@@ -7,6 +7,8 @@
 [![ChromaDB](https://img.shields.io/badge/Vector%20DB-ChromaDB-6A0DAD?style=for-the-badge)](https://trychroma.com)
 [![Groq API](https://img.shields.io/badge/LLM-Groq%20API-f55036?style=for-the-badge)](https://groq.com)
 
+![Adaptive RAG Executive Dashboard](ui/screenshot/ui.PNG)
+
 An end-to-end, production-grade **Retrieval-Augmented Generation (RAG)** system built **100% from scratch in native Python without high-level frameworks like LangChain**. Features dynamic document ingestion, true vector store purging on source deletion, native SentenceTransformer embeddings, ChromaDB persistent vector search, and real-time Grounding Confidence Index (GCI) telemetry.
 
 ---
@@ -58,29 +60,29 @@ Adaptive-RAG/
 │   ├── documents/              # Stored uploaded files
 │   ├── active_docs.json        # Active document registry
 │   └── performance_logs.json   # Query evaluation logs
-├── src/
-│   ├── config.py               # System parameters & model defaults
-│   ├── ingestion/              # Native document loaders, chunking & registry
-│   │   ├── loaders.py          # PDF, DOCX, TXT, Web URL native extractors
-│   │   ├── chunker.py          # Pure Python recursive text splitter
-│   │   └── source_manager.py   # Registry & vector purge coordinator
-│   ├── embeddings/
-│   │   └── manager.py          # Native SentenceTransformer embedding model wrapper
-│   ├── vectordb/
-│   │   └── vector_store.py     # Native ChromaDB persistent client adapter
-│   ├── generator/
-│   │   ├── retriever.py        # Semantic similarity search with distance thresholding
-│   │   ├── prompts.py          # Context-grounded anti-hallucination prompts
-│   │   └── llm.py              # Native Groq REST API client & streaming engine
-│   ├── evaluation/
-│   │   └── performance_monitor.py # GCI confidence evaluator & event logger
-│   └── ui/
-│       ├── styles.py           # Executive light design system & CSS tokens
-│       └── app.py              # Streamlit 4-tab executive interface
+├── ingestion/                  # Native document loaders, chunking & registry
+│   ├── loaders.py              # PDF, DOCX, TXT, Web URL native extractors
+│   ├── chunker.py              # Pure Python recursive text splitter
+│   └── source_manager.py       # Registry & vector purge coordinator
+├── embeddings/                 # Native SentenceTransformer embedding model wrapper
+│   └── manager.py
+├── vectordb/                   # Native ChromaDB persistent client adapter
+│   └── vector_store.py
+├── generator/                  # Retrieval, system prompts & Groq API LLM client
+│   ├── retriever.py            # Semantic similarity search with distance thresholding
+│   ├── prompts.py              # Context-grounded anti-hallucination prompts
+│   └── llm.py                  # Native Groq REST API client & streaming engine
+├── evaluation/                 # Telemetry & GCI evaluation
+│   └── performance_monitor.py # GCI confidence evaluator & event logger
+├── ui/                         # Executive design system & Streamlit interface
+│   ├── styles.py               # Executive light design system & CSS tokens
+│   ├── app.py                  # Streamlit 4-tab executive interface
+│   └── screenshot/ui.PNG       # Interface screenshot
 ├── tests/                      # Pytest unit testing suite
 │   ├── test_ingestion.py       # Ingestion & chunker unit tests
 │   ├── test_vectordb.py        # ChromaDB vector store tests
 │   └── test_evaluation.py     # GCI telemetry evaluation tests
+├── config.py                   # Global system parameters & model defaults
 ├── .env.example                # Sample environment variables
 ├── requirements.txt            # Python dependencies
 └── README.md                   # Project documentation
@@ -109,7 +111,7 @@ GROQ_API_KEY=your_groq_api_key_here
 
 ### 4. Run the Application
 ```bash
-streamlit run src/ui/app.py
+streamlit run ui/app.py
 ```
 
 Open `http://localhost:8501` in your browser.
