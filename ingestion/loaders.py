@@ -24,12 +24,37 @@ class DocumentLoaderTool:
 
     @staticmethod
     def load_pdf(file_path: str) -> List[NativeDocument]:
-        """Load text and metadata from PDF files using pypdf."""
+        """Load text and metadata from digital and scanned image PDF files (with OCR fallback)."""
         docs = []
         filename = os.path.basename(file_path)
         reader = pypdf.PdfReader(file_path)
         for page_idx, page in enumerate(reader.pages):
             text = page.extract_text() or ""
+
+            # OCR Fallback for scanned/image pages if text is empty
+            if not text.strip():
+                try:
+                    import pdfplumber
+                    with pdfplumber.open(file_path) as pdf:
+                        if page_idx < len(pdf.pages):
+                            p = pdf.pages[page_idx]
+                            text = p.extract_text() or ""
+                except Exception:
+                    pass
+
+            if not text.strip():
+                try:
+                    import pytesseract
+                    from PIL import Image
+                    import fitz  # PyMuPDF
+                    doc_fitz = fitz.open(file_path)
+                    page_fitz = doc_fitz[page_idx]
+                    pix = page_fitz.get_pixmap()
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    text = pytesseract.image_to_string(img) or ""
+                except Exception:
+                    pass
+
             if text.strip():
                 docs.append(NativeDocument(
                     page_content=text,
@@ -41,6 +66,7 @@ class DocumentLoaderTool:
                     }
                 ))
         return docs
+
 
     @staticmethod
     def load_txt(file_path: str) -> List[NativeDocument]:

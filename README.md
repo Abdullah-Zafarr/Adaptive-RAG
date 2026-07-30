@@ -16,14 +16,16 @@ An end-to-end, production-grade **Retrieval-Augmented Generation (RAG)** system 
 ## 🌟 Key Features
 
 - ⚡ **100% Native Architecture**: Built completely from scratch without LangChain, LlamaIndex, or high-level wrappers.
-- 📄 **Multi-Format Ingestion**: Native extraction for PDF (`pypdf`), DOCX (`python-docx`), TXT, and Web URLs (`BeautifulSoup4`).
+- 📄 **Multi-Format & Scanned Document Ingestion**: Native text extraction for **both Digital & Scanned Image PDFs** (`pypdf` + `pdfplumber` + `pytesseract` OCR), Word (`python-docx`), TXT, and Web Endpoints (`BeautifulSoup4`).
+- 👁️ **Automatic OCR Fallback**: Built-in Optical Character Recognition pipeline parses non-selectable, image-based, and scanned PDF documents seamlessly.
+- ☁️ **Cloud Supabase Vector Engine**: Production-grade cloud vector database powered by PostgreSQL `pgvector` with cosine similarity search and real-time remote document sync.
 - ✂️ **Native Recursive Text Chunker**: Custom sliding window text splitter algorithm with configurable overlap and sentence boundary preservation.
-- 🗑️ **True Vector Store Deletion**: Deleting a document from the UI purges its physical file and deletes all corresponding vector embeddings from ChromaDB.
+- 🗑️ **True Vector Store Deletion**: Deleting a document from the UI purges its database records and deletes all corresponding vector embeddings from Supabase Cloud.
 - ⚡ **Direct Groq LPU Inference**: Direct REST API integration with **Groq API** (`llama-3.3-70b-versatile`, `mixtral-8x7b-32768`) supporting streaming tokens.
-- 🗄️ **Native ChromaDB Persistent Engine**: Local dense vector indexing using `chromadb.PersistentClient()` with cosine space similarity search.
 - 📐 **Local Dense Embeddings**: `SentenceTransformer` vectorizers (`all-MiniLM-L6-v2`, `bge-small-en-v1.5`) running locally with zero external network latency.
 - 📊 **Telemetry Analytics**: Real-time Grounding Confidence Index (GCI) scoring, latency logging, and vector source distribution charts.
 - 🎨 **Executive UI**: Light executive aesthetic with `2.5px` solid charcoal borders, vector SVG icons, and a 4-tab workbench.
+
 
 ---
 
