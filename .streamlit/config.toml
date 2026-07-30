@@ -1,0 +1,16 @@
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+
+[global]
+disableWatchdogWarning = true
+
+[browser]
+gatherUsageStats = false
+
+[runner]
+magicEnabled = false
+
+[server.fileWatcherType]
+type = "none"
