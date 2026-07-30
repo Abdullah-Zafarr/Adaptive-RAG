@@ -717,7 +717,34 @@ div[data-testid="stFileUploaderFileData"] button,
     color: #64748b !important;
 }
 
+/* Fix Text Inputs (Web Endpoint Ingest Input Box) */
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextInput"] div[data-baseweb="input"],
+div[data-testid="stTextInput"] div[data-baseweb="base-input"],
+.stTextInput > div > div > input {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 2.5px solid #0f172a !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+}
+
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stTextInput"] input:active,
+div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #000000 !important;
+}
+
+div[data-testid="stTextInput"] input::placeholder {
+    color: #64748b !important;
+}
+
 /* Inputs & Selectboxes (High Contrast Executive Theme) */
+
 div[data-baseweb="select"],
 div[data-baseweb="select"] > div,
 div[data-baseweb="select"] [data-testid="stSelectbox"] {
