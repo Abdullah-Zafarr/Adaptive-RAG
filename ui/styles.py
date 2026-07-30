@@ -21,16 +21,21 @@ html, body, [class*="css"] {
     max-width: 100% !important;
 }
 
-/* Hide default Streamlit header & footer except sidebar toggle */
+/* Hide default Streamlit header elements except top-left sidebar toggle */
 #MainMenu, footer { display: none !important; }
-header { background: transparent !important; }
+header {
+    background: transparent !important;
+    height: 3rem !important;
+    z-index: 99999 !important;
+}
 .stDeployButton { display: none !important; }
 
 /* Styled High-Contrast Black Sidebar Toggle Button (Expand / Collapse) */
 button[data-testid="stSidebarCollapseButton"],
 button[aria-label="Close sidebar"],
 button[aria-label="Open sidebar"],
-[data-testid="stHeader"] button {
+[data-testid="stHeader"] button,
+[data-testid="stSidebarHeader"] button {
     background-color: #0f172a !important;
     background: #0f172a !important;
     color: #ffffff !important;
@@ -45,12 +50,14 @@ button[aria-label="Open sidebar"],
     transition: all 0.2s ease !important;
     width: 34px !important;
     height: 34px !important;
+    margin: 6px !important;
 }
 
 button[data-testid="stSidebarCollapseButton"] *,
 button[aria-label="Close sidebar"] *,
 button[aria-label="Open sidebar"] *,
-[data-testid="stHeader"] button * {
+[data-testid="stHeader"] button *,
+[data-testid="stSidebarHeader"] button * {
     color: #ffffff !important;
     fill: #ffffff !important;
     stroke: #ffffff !important;
@@ -59,11 +66,13 @@ button[aria-label="Open sidebar"] *,
 button[data-testid="stSidebarCollapseButton"]:hover,
 button[aria-label="Close sidebar"]:hover,
 button[aria-label="Open sidebar"]:hover,
-[data-testid="stHeader"] button:hover {
+[data-testid="stHeader"] button:hover,
+[data-testid="stSidebarHeader"] button:hover {
     background-color: #1e293b !important;
     background: #1e293b !important;
     transform: scale(1.05);
 }
+
 
 /* ─── Sidebar (Soft Tint Panel Background & Thick 2.5px Borders) ── */
 section[data-testid="stSidebar"] {
