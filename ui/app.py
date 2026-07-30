@@ -33,10 +33,13 @@ def clean_ai_content(content: str) -> str:
 
 # Ensure workspace root path is accessible
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
+CWD_DIR = os.getcwd()
+for p in [ROOT_DIR, CWD_DIR]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K, DEFAULT_DISTANCE_THRESHOLD
+
 
 from ingestion.source_manager import DataSourceManager
 from embeddings.manager import EmbeddingManager
