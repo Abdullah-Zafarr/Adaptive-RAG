@@ -7,14 +7,18 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
-CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", str(DATA_DIR / "chroma_db"))
 DOCUMENTS_DIR = os.getenv("DOCUMENTS_DIR", str(DATA_DIR / "documents"))
 REGISTRY_FILE = os.getenv("REGISTRY_FILE", str(DATA_DIR / "active_docs.json"))
 PERFORMANCE_LOG_FILE = os.getenv("PERFORMANCE_LOG_FILE", str(DATA_DIR / "performance_logs.json"))
 
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://mzldiecgtgjyknjmtsxz.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
+
+
 # Ensure required directories exist
-for path_str in [CHROMA_PERSIST_DIR, DOCUMENTS_DIR, DATA_DIR]:
+for path_str in [DOCUMENTS_DIR, DATA_DIR]:
     os.makedirs(path_str, exist_ok=True)
+
 
 # Default Settings
 DEFAULT_CHUNK_SIZE = 500

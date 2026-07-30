@@ -109,7 +109,9 @@ LOGO_ICON_SVG = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 GROQ_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#f97316" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
 
-CHROMA_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><circle cx="12" cy="12" r="9" fill="#ef4444"/></svg>"""
+SUPABASE_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><path d="M13.35 21.65a.8.8 0 0 1-1.34.42l-9.15-8.5a.8.8 0 0 1 .54-1.37h8.17L10.65 2.35a.8.8 0 0 1 1.34-.42l9.15 8.5a.8.8 0 0 1-.54 1.37h-8.17l.92 9.85z" fill="#3ecf8e"/></svg>"""
+CHROMA_LOGO_SVG = SUPABASE_LOGO_SVG
+
 
 HF_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><circle cx="12" cy="12" r="9" fill="#0f172a"/><path d="M8 12h8M12 8v8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>"""
 
@@ -311,8 +313,9 @@ with main_col:
                         <div class="feature-desc">Sub-second grounded inference powered by Groq's high-speed LPU architecture.</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-title">{CHROMA_LOGO_SVG} ChromaDB Vector Index</div>
-                        <div class="feature-desc">Persistent document chunk vector store with dynamic similarity distance filtering.</div>
+                        <div class="feature-title">{CHROMA_LOGO_SVG} Supabase Vector Index</div>
+                        <div class="feature-desc">Cloud PostgreSQL vector store powered by pgvector with dynamic similarity distance filtering.</div>
+
                     </div>
                     <div class="feature-card">
                         <div class="feature-title">{HF_LOGO_SVG} HuggingFace Embeddings</div>
@@ -415,7 +418,8 @@ with main_col:
             <div class="app-footer">
                 <span>{GROQ_LOGO_SVG} Powered by Groq</span>
                 <span>•</span>
-                <span>{CHROMA_LOGO_SVG} ChromaDB Engine</span>
+                <span>{CHROMA_LOGO_SVG} Supabase Engine</span>
+
                 <span>•</span>
                 <span>{len(get_active_docs())} Active Sources</span>
             </div>
@@ -855,8 +859,8 @@ with right_col:
             </div>
             <div class="status-grid">
                 <div class="status-tile">
-                    <div class="status-service">{CHROMA_LOGO_SVG} Vector DB</div>
-                    <div class="status-provider">ChromaDB</div>
+                    <div class="status-service">🔴 Vector DB</div>
+                    <div class="status-provider">Supabase</div>
                     <div class="status-healthy">{vdb_status}</div>
                 </div>
                 <div class="status-tile">

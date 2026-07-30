@@ -1,93 +1,144 @@
 import os
-import shutil
+import math
 from typing import List, Tuple, Optional, Any
-import chromadb
+from supabase import create_client, Client
 from ingestion.loaders import NativeDocument
-from config import CHROMA_PERSIST_DIR
+from config import SUPABASE_URL, SUPABASE_KEY
 
 class VectorStoreManager:
-    """Manager for ChromaDB Vector Database using native ChromaDB client without LangChain."""
+    """Manager for Supabase Vector Database using native Supabase Client + pgvector cosine similarity."""
 
     def __init__(self, embedding_model: Any = None):
         self.embedding_model = embedding_model
-        self.client = None
-        self.collection = None
+        self.client: Optional[Client] = None
         self._init_db()
 
     def _init_db(self):
-        """Initialize local ChromaDB persistent collection."""
-        os.makedirs(CHROMA_PERSIST_DIR, exist_ok=True)
-        self.client = chromadb.PersistentClient(path=CHROMA_PERSIST_DIR)
-        self.collection = self.client.get_or_create_collection(
-            name="rag_knowledge_base",
-            metadata={"hnsw:space": "cosine"}
-        )
+        """Initialize Supabase client connection."""
+        if SUPABASE_URL and SUPABASE_KEY:
+            try:
+                self.client = create_client(SUPABASE_URL, SUPABASE_KEY)
+            except Exception as e:
+                print(f"Supabase Client Init Error: {e}")
+                self.client = None
 
     def add_documents(self, chunks: List[NativeDocument]) -> List[str]:
-        """Add document chunks to ChromaDB natively."""
-        if not chunks:
+        """Add document chunks to Supabase vector store table."""
+        if not chunks or not self.client:
             return []
 
-        ids = [chunk.metadata.get("chunk_id", f"chunk_{i}") for i, chunk in enumerate(chunks)]
         documents = [chunk.page_content for chunk in chunks]
-        metadatas = [chunk.metadata for chunk in chunks]
 
         if self.embedding_model:
             embeddings = self.embedding_model.embed_documents(documents)
-            self.collection.add(
-                ids=ids,
-                documents=documents,
-                metadatas=metadatas,
-                embeddings=embeddings
-            )
         else:
-            self.collection.add(
-                ids=ids,
-                documents=documents,
-                metadatas=metadatas
-            )
+            embeddings = [[0.0] * 384 for _ in chunks]
+
+        rows = []
+        ids = []
+        for i, chunk in enumerate(chunks):
+            chunk_id = chunk.metadata.get("chunk_id", f"chunk_{i}")
+            doc_id = chunk.metadata.get("doc_id", "")
+            filename = chunk.metadata.get("filename", "")
+            page = chunk.metadata.get("page", 1)
+
+            rows.append({
+                "chunk_id": chunk_id,
+                "doc_id": doc_id,
+                "content": chunk.page_content,
+                "metadata": chunk.metadata,
+                "embedding": embeddings[i],
+                "filename": filename,
+                "page": page
+            })
+            ids.append(chunk_id)
+
+        try:
+            self.client.table("documents").upsert(rows).execute()
+        except Exception as e:
+            print(f"Supabase add_documents error: {e}")
+
         return ids
 
     def delete_document_by_id(self, doc_id: str):
-        """Delete all vector embeddings matching doc_id from ChromaDB."""
+        """Delete all vector embeddings matching doc_id from Supabase."""
+        if not self.client:
+            return
         try:
-            results = self.collection.get(where={"doc_id": doc_id})
-            matching_ids = results.get("ids", [])
-            if matching_ids:
-                self.collection.delete(ids=matching_ids)
+            self.client.table("documents").delete().eq("doc_id", doc_id).execute()
         except Exception as e:
-            print(f"Error purging doc_id {doc_id} from ChromaDB: {e}")
+            print(f"Error purging doc_id {doc_id} from Supabase: {e}")
 
     def similarity_search_with_score(self, query: str, k: int = 4) -> List[Tuple[NativeDocument, float]]:
-        """Perform native semantic similarity search returning documents and distance scores."""
-        if not self.collection:
+        """Perform native semantic similarity search returning documents and distance scores via Supabase RPC or client cosine fallback."""
+        if not self.client:
             return []
+
         try:
-            if self.embedding_model:
-                query_embedding = self.embedding_model.embed_query(query)
-                results = self.collection.query(
-                    query_embeddings=[query_embedding],
-                    n_results=k
-                )
-            else:
-                results = self.collection.query(
-                    query_texts=[query],
-                    n_results=k
-                )
+            if not self.embedding_model:
+                return []
 
-            docs_with_scores = []
-            if results and results.get("documents") and results["documents"][0]:
-                retrieved_texts = results["documents"][0]
-                retrieved_metas = results["metadatas"][0] if results.get("metadatas") else [{}] * len(retrieved_texts)
-                retrieved_dists = results["distances"][0] if results.get("distances") else [0.0] * len(retrieved_texts)
+            query_embedding = self.embedding_model.embed_query(query)
 
-                for text, meta, dist in zip(retrieved_texts, retrieved_metas, retrieved_dists):
-                    doc = NativeDocument(page_content=text, metadata=meta)
-                    docs_with_scores.append((doc, float(dist)))
+            # Attempt Supabase RPC match_documents vector function
+            try:
+                rpc_res = self.client.rpc(
+                    "match_documents",
+                    {
+                        "query_embedding": query_embedding,
+                        "match_threshold": 0.0,
+                        "match_count": k
+                    }
+                ).execute()
 
-            return docs_with_scores
+                if rpc_res.data:
+                    docs_with_scores = []
+                    for row in rpc_res.data:
+                        meta = row.get("metadata", {})
+                        if not meta:
+                            meta = {
+                                "doc_id": row.get("doc_id"),
+                                "filename": row.get("filename"),
+                                "page": row.get("page", 1)
+                            }
+                        doc = NativeDocument(page_content=row.get("content", ""), metadata=meta)
+                        # Cosine similarity -> distance (1 - similarity)
+                        sim = float(row.get("similarity", 0.0))
+                        dist = max(0.0, 1.0 - sim)
+                        docs_with_scores.append((doc, dist))
+                    return docs_with_scores
+            except Exception as rpc_err:
+                pass
+
+            # Client-side fallback if RPC is not created yet
+            res = self.client.table("documents").select("*").execute()
+            if not res.data:
+                return []
+
+            def cosine_distance(vec1, vec2):
+                dot = sum(a * b for a, b in zip(vec1, vec2))
+                norm1 = math.sqrt(sum(a * a for a in vec1))
+                norm2 = math.sqrt(sum(b * b for b in vec2))
+                if norm1 == 0 or norm2 == 0:
+                    return 1.0
+                sim = dot / (norm1 * norm2)
+                return max(0.0, 1.0 - sim)
+
+            scored = []
+            for row in res.data:
+                emb = row.get("embedding")
+                if not emb:
+                    continue
+                dist = cosine_distance(query_embedding, emb)
+                meta = row.get("metadata", {}) or {"doc_id": row.get("doc_id"), "filename": row.get("filename")}
+                doc = NativeDocument(page_content=row.get("content", ""), metadata=meta)
+                scored.append((doc, dist))
+
+            scored.sort(key=lambda x: x[1])
+            return scored[:k]
+
         except Exception as e:
-            print(f"Search error: {e}")
+            print(f"Supabase search error: {e}")
             return []
 
     def max_marginal_relevance_search(self, query: str, k: int = 4) -> List[NativeDocument]:
@@ -96,11 +147,10 @@ class VectorStoreManager:
         return [doc for doc, _ in results]
 
     def reset_db(self):
-        """Purge and reset the ChromaDB database."""
+        """Purge and reset all documents from Supabase table."""
+        if not self.client:
+            return
         try:
-            self.client.delete_collection(name="rag_knowledge_base")
-        except Exception:
-            pass
-        shutil.rmtree(CHROMA_PERSIST_DIR, ignore_errors=True)
-        os.makedirs(CHROMA_PERSIST_DIR, exist_ok=True)
-        self._init_db()
+            self.client.table("documents").delete().neq("chunk_id", "").execute()
+        except Exception as e:
+            print(f"Error resetting Supabase table: {e}")
