@@ -38,7 +38,10 @@ for p in [ROOT_DIR, CWD_DIR]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K, DEFAULT_DISTANCE_THRESHOLD
+import config
+from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K
+DEFAULT_DISTANCE_THRESHOLD = getattr(config, "DEFAULT_DISTANCE_THRESHOLD", 2.0)
+
 
 
 from ingestion.source_manager import DataSourceManager
