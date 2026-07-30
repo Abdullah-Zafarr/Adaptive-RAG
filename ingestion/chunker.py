@@ -1,7 +1,7 @@
 import time
 from typing import List
-from src.ingestion.loaders import NativeDocument
-from src.config import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
+from ingestion.loaders import NativeDocument
+from config import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 
 class TextChunker:
     """Native recursive character text chunking strategy in pure Python."""

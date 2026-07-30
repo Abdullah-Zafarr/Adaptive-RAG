@@ -1,6 +1,6 @@
 import os
 import tempfile
-from src.evaluation.performance_monitor import PerformanceMonitor
+from evaluation.performance_monitor import PerformanceMonitor
 
 def test_performance_monitor_logging():
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:

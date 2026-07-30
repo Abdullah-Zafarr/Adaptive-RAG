@@ -1,1 +1,0 @@
-"""RAG Knowledge Assistant package."""

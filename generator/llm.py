@@ -3,7 +3,7 @@ import time
 import json
 import requests
 from typing import Generator, Tuple, Optional
-from src.generator.prompts import RAG_SYSTEM_PROMPT
+from generator.prompts import RAG_SYSTEM_PROMPT
 
 class LLMResponseGenerator:
     """Native LLM Generator using Groq API directly without LangChain."""

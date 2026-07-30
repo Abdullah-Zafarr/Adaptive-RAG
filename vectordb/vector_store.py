@@ -2,8 +2,8 @@ import os
 import shutil
 from typing import List, Tuple, Optional, Any
 import chromadb
-from src.ingestion.loaders import NativeDocument
-from src.config import CHROMA_PERSIST_DIR
+from ingestion.loaders import NativeDocument
+from config import CHROMA_PERSIST_DIR
 
 class VectorStoreManager:
     """Manager for ChromaDB Vector Database using native ChromaDB client without LangChain."""

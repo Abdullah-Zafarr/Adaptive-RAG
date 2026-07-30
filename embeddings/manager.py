@@ -1,6 +1,6 @@
 from typing import Any, List
 from sentence_transformers import SentenceTransformer
-from src.config import EMBEDDING_MODELS
+from config import EMBEDDING_MODELS
 
 class NativeEmbeddingModel:
     """Native Wrapper for SentenceTransformer embeddings without LangChain."""

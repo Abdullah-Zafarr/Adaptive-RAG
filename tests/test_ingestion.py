@@ -1,9 +1,9 @@
 import os
 import tempfile
 import pytest
-from src.ingestion.loaders import DocumentLoaderTool, get_file_hash
-from src.ingestion.chunker import TextChunker
-from src.ingestion.source_manager import DataSourceManager
+from ingestion.loaders import DocumentLoaderTool, get_file_hash
+from ingestion.chunker import TextChunker
+from ingestion.source_manager import DataSourceManager
 
 def test_file_hash():
     content = b"Hello RAG World"

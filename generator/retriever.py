@@ -1,7 +1,7 @@
 import time
 from typing import List, Tuple, Dict, Any
-from src.ingestion.loaders import NativeDocument
-from src.vectordb.vector_store import VectorStoreManager
+from ingestion.loaders import NativeDocument
+from vectordb.vector_store import VectorStoreManager
 
 class RetrieverTool:
     """Native Retriever Tool with distance threshold filtering & telemetry metrics without LangChain."""

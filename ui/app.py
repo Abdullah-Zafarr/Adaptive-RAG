@@ -9,14 +9,14 @@ import streamlit as st
 # Ensure src path is accessible
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from src.config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K
-from src.ingestion.source_manager import DataSourceManager
-from src.embeddings.manager import EmbeddingManager
-from src.vectordb.vector_store import VectorStoreManager
-from src.generator.retriever import RetrieverTool
-from src.generator.llm import LLMResponseGenerator
-from src.evaluation.performance_monitor import PerformanceMonitor
-from src.ui.styles import CUSTOM_CSS
+from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K
+from ingestion.source_manager import DataSourceManager
+from embeddings.manager import EmbeddingManager
+from vectordb.vector_store import VectorStoreManager
+from generator.retriever import RetrieverTool
+from generator.llm import LLMResponseGenerator
+from evaluation.performance_monitor import PerformanceMonitor
+from ui.styles import CUSTOM_CSS
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(

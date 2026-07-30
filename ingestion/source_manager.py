@@ -4,9 +4,9 @@ import time
 import uuid
 import shutil
 from typing import List, Dict, Any, Optional
-from src.config import REGISTRY_FILE, DOCUMENTS_DIR
-from src.ingestion.loaders import DocumentLoaderTool, get_file_hash
-from src.ingestion.chunker import TextChunker
+from config import REGISTRY_FILE, DOCUMENTS_DIR
+from ingestion.loaders import DocumentLoaderTool, get_file_hash
+from ingestion.chunker import TextChunker
 
 class DataSourceManager:
     """Manager to track active documents and coordinate dynamic add/delete operations."""

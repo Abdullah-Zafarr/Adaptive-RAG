@@ -1,7 +1,7 @@
 import tempfile
 from langchain_core.documents import Document
-from src.embeddings.manager import EmbeddingManager
-from src.vectordb.vector_store import VectorStoreManager
+from embeddings.manager import EmbeddingManager
+from vectordb.vector_store import VectorStoreManager
 
 def test_chroma_vector_store_add_and_delete():
     emb_model = EmbeddingManager.get_embedding_model("all-MiniLM-L6-v2 (384d)")
