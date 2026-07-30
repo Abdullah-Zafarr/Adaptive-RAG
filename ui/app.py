@@ -528,13 +528,17 @@ with main_col:
                 with col_b:
                     st.markdown(
                         f"""
-                        <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; text-align: center;">
-                            <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">{chunks} Chunks</div>
-                            <div style="font-size: 0.72rem; color: #475569;">Indexed Vectors</div>
+                        <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">{chunks} Chunks</div>
+                                <div style="font-size: 0.72rem; color: #475569;">Indexed Vectors</div>
+                            </div>
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
+
                 with col_c:
                     if st.button("Remove", key=f"del_doc_{idx}", use_container_width=True):
                         st.session_state.source_manager.remove_document(doc.get("doc_id"))
