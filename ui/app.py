@@ -522,11 +522,11 @@ with main_col:
                 with col_a:
                     st.markdown(
                         f"""
-                        <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px;">
-                            <div style="background: #0f172a; color: #ffffff; font-weight: 800; font-size: 0.72rem; padding: 4px 8px; border-radius: 4px;">{ext}</div>
-                            <div>
-                                <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">{fname}</div>
-                                <div style="font-size: 0.72rem; color: #475569;">Ingested {added_at} • {fsize}</div>
+                        <div style="background: #f1f5f9; border: 2.5px solid #0f172a; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden;">
+                            <div style="background: #0f172a; color: #ffffff; font-weight: 800; font-size: 0.68rem; padding: 4px 6px; border-radius: 4px; flex-shrink: 0; max-width: 90px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{ext}</div>
+                            <div style="min-width: 0; flex: 1; overflow: hidden;">
+                                <div style="font-weight: 800; font-size: 0.84rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{fname}">{fname}</div>
+                                <div style="font-size: 0.70rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ingested {added_at} • {fsize}</div>
                             </div>
                         </div>
                         """,
