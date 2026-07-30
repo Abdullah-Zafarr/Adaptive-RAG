@@ -90,6 +90,7 @@ section[data-testid="stSidebar"] div.stButton {
 /* Inactive Nav Buttons */
 section[data-testid="stSidebar"] div.stButton > button {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     border: 2.5px solid #0f172a !important;
     color: #0f172a !important;
     border-radius: 8px !important;
@@ -109,8 +110,22 @@ section[data-testid="stSidebar"] div.stButton > button {
     white-space: nowrap !important;
 }
 
+section[data-testid="stSidebar"] div.stButton > button *,
+section[data-testid="stSidebar"] div.stButton > button p,
+section[data-testid="stSidebar"] div.stButton > button span {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
 section[data-testid="stSidebar"] div.stButton > button:hover {
     background: #0f172a !important;
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+}
+
+section[data-testid="stSidebar"] div.stButton > button:hover *,
+section[data-testid="stSidebar"] div.stButton > button:hover p,
+section[data-testid="stSidebar"] div.stButton > button:hover span {
     color: #ffffff !important;
 }
 
@@ -118,12 +133,15 @@ section[data-testid="stSidebar"] div.stButton > button:hover {
 .nav-active-wrap div.stButton > button,
 section[data-testid="stSidebar"] div.stButton.nav-active > button {
     background: #0f172a !important;
+    background-color: #0f172a !important;
     border: 2.5px solid #000000 !important;
     color: #ffffff !important;
     font-weight: 800 !important;
 }
 
-.nav-active-wrap button div p {
+.nav-active-wrap button *,
+.nav-active-wrap button div p,
+.nav-active-wrap button div span {
     color: #ffffff !important;
     font-weight: 800 !important;
 }
