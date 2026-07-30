@@ -260,13 +260,23 @@ with main_col:
             else:
                 sources_html = ""
                 if message.get("sources"):
-                    sources_html = '<div class="source-pills-row"><span>Sources:</span>'
-                    for src in message["sources"][:2]:
-                        clean_src_name = clean_filename(src.get("filename", ""))
-                        sources_html += f'<span class="source-pill">{clean_src_name} (p.{src.get("page", 1)})</span>'
-                    if len(message["sources"]) > 2:
-                        sources_html += f'<span style="color:#0f172a;font-size:0.75rem;font-weight:700;">+ {len(message["sources"])-2} more</span>'
-                    sources_html += "</div>"
+                    # Deduplicate sources by filename
+                    seen = set()
+                    unique_sources = []
+                    for src in message["sources"]:
+                        name = clean_filename(src.get("filename", ""))
+                        if name and name not in seen:
+                            seen.add(name)
+                            unique_sources.append(src)
+                    
+                    if unique_sources:
+                        sources_html = '<div class="source-pills-row"><span>Sources:</span>'
+                        for src in unique_sources:
+                            clean_src_name = clean_filename(src.get("filename", ""))
+                            page = src.get("page", 1)
+                            page_str = f" (p.{page})" if isinstance(page, int) and page > 0 else ""
+                            sources_html += f'<span class="source-pill">{clean_src_name}{page_str}</span>'
+                        sources_html += "</div>"
 
                 metrics_html = ""
                 if message.get("metrics"):
