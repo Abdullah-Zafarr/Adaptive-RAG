@@ -247,22 +247,20 @@ with main_col:
                     m = message["metrics"]
                     gci = int(m.get("grounding_confidence_index", 0) * 100)
                     latency = m.get("total_latency_ms", 0)
-                    metrics_html = f"""
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-                        <span style="color:#0f172a;font-size:0.75rem;font-weight:700;">{gci}% Relevant</span>
-                        <span style="color:#475569;font-size:0.75rem;">Latency: {latency:.2f}ms</span>
-                    </div>
-                    """
+                    metrics_html = (
+                        f'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
+                        f'<span style="color:#0f172a;font-size:0.75rem;font-weight:700;">{gci}% Relevant</span>'
+                        f'<span style="color:#475569;font-size:0.75rem;">Latency: {latency:.2f}ms</span>'
+                        f'</div>'
+                    )
 
                 st.markdown(
-                    f"""
-                    <div class="ai-message-card">
-                        <div class="ai-icon">{AI_SPARK_SVG}</div>
-                        <div class="ai-content">{message["content"]}</div>
-                        {sources_html}
-                        {metrics_html}
-                    </div>
-                    """,
+                    f'<div class="ai-message-card">'
+                    f'<div class="ai-icon">{AI_SPARK_SVG}</div>'
+                    f'<div class="ai-content">{message["content"]}</div>'
+                    f'{sources_html}'
+                    f'{metrics_html}'
+                    f'</div>',
                     unsafe_allow_html=True,
                 )
 
