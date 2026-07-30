@@ -6,8 +6,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-# Ensure src path is accessible
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+# Ensure workspace root path is accessible
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 from config import EMBEDDING_MODELS, GROQ_MODELS, DEFAULT_GROQ_MODEL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_TOP_K
 from ingestion.source_manager import DataSourceManager
@@ -80,11 +82,11 @@ def get_active_docs():
 # Clean Vector SVG Icons
 LOGO_ICON_SVG = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>"""
 
-GROQ_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#f97316" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+GROQ_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#f97316" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
 
-CHROMA_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9" fill="url(#chromaGrad)"/><defs><linearGradient id="chromaGrad" x1="3" y1="3" x2="21" y2="21"><stop offset="0%" stop-color="#ff4b4b"/><stop offset="50%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs></svg>"""
+CHROMA_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><circle cx="12" cy="12" r="9" fill="#ef4444"/></svg>"""
 
-HF_LOGO_SVG = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><rect width="20" height="20" x="2" y="2" rx="5" fill="#0f172a"/><path d="M8 12h8M12 8v8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>"""
+HF_LOGO_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;flex-shrink:0;"><circle cx="12" cy="12" r="9" fill="#0f172a"/><path d="M8 12h8M12 8v8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>"""
 
 AI_SPARK_SVG = """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M12 2v20M2 12h20M17 7l-10 10M7 7l10 10"/></svg>"""
 
