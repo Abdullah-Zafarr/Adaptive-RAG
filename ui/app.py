@@ -45,14 +45,18 @@ from generator.llm import LLMResponseGenerator
 from evaluation.performance_monitor import PerformanceMonitor
 from ui.styles import CUSTOM_CSS
 
+if "sidebar_state" not in st.session_state:
+    st.session_state.sidebar_state = "expanded"
+
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Adaptive RAG — Knowledge Assistant",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state=st.session_state.sidebar_state
 )
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
 
 # ─── Session State ─────────────────────────────────────────────────────────────
 if "source_manager" not in st.session_state:
@@ -138,19 +142,28 @@ SOURCE_COLORS = ["#7c3aed", "#06b6d4", "#818cf8", "#f59e0b", "#94a3b8"]
 
 # ─── LEFT SIDEBAR ──────────────────────────────────────────────────────────────
 with st.sidebar:
-    # App Logo
-    st.markdown(
-        f"""
-        <div class="app-logo">
-            <div class="app-logo-icon">{LOGO_ICON_SVG}</div>
-            <div class="app-logo-text">
-                <div class="app-logo-name">Adaptive RAG</div>
-                <div class="app-logo-sub">Knowledge Assistant</div>
+    # App Logo Header with Black Collapse Button
+    logo_col, toggle_col = st.columns([4, 1], vertical_alignment="center")
+    with logo_col:
+        st.markdown(
+            f"""
+            <div class="app-logo" style="margin-bottom:0;">
+                <div class="app-logo-icon">{LOGO_ICON_SVG}</div>
+                <div class="app-logo-text">
+                    <div class="app-logo-name">Adaptive RAG</div>
+                    <div class="app-logo-sub">Knowledge Assistant</div>
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
+    with toggle_col:
+        if st.button("◀", key="toggle_sidebar_btn_collapse", help="Collapse Sidebar", use_container_width=True):
+            st.session_state.sidebar_state = "collapsed"
+            st.rerun()
+
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
 
     # Navigation Menu
     if "active_page" not in st.session_state:
@@ -217,13 +230,20 @@ with main_col:
     # PAGE: CHAT ASSISTANT
     # ═══════════════════════════════════════════════════════════════════════════
     if active_page == "Chat Assistant":
-        # Full-Width Title Header Line
-        st.markdown(
-            '<div class="welcome-title">Welcome back, Abdullah!</div>',
-            unsafe_allow_html=True,
-        )
+        # Full-Width Title Header Line with Expand Button when collapsed
+        if st.session_state.sidebar_state == "collapsed":
+            t_col1, t_col2 = st.columns([0.08, 0.92], vertical_alignment="center")
+            with t_col1:
+                if st.button("▶", key="toggle_sidebar_btn_expand", help="Expand Sidebar", use_container_width=True):
+                    st.session_state.sidebar_state = "expanded"
+                    st.rerun()
+            with t_col2:
+                st.markdown('<div class="welcome-title">Welcome back, Abdullah!</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="welcome-title">Welcome back, Abdullah!</div>', unsafe_allow_html=True)
 
         st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
 
         # Row Below Full Line: Subtitle on Left, Model Select Dropdown on Right
         sub_l, sub_r = st.columns([2.8, 1.2], vertical_alignment="center")
