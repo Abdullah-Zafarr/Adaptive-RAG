@@ -629,12 +629,23 @@ div[data-testid="stFileUploaderFileData"] button,
 }
 
 /* Inputs & Selectboxes (Slight Tint Background) */
-.stSelectbox > div > div, .stTextInput > div > div > input {
+.stSelectbox > div > div, .stTextInput > div > div > input,
+div[data-baseweb="select"] > div {
     background: #f1f5f9 !important;
     border: 2.5px solid #0f172a !important;
     border-radius: 8px !important;
     color: #0f172a !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
+}
+
+div[data-baseweb="select"] * {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+div[data-baseweb="select"] svg {
+    fill: #0f172a !important;
+    color: #0f172a !important;
 }
 
 .stSelectbox > div > div:focus-within, .stTextInput > div > div > input:focus {
