@@ -1,11 +1,14 @@
 # 🧠 Adaptive RAG Knowledge Assistant
 ### *Real-Time Data Source Control, Native Vector Store & RAG Performance Telemetry*
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://rag-adaptive.streamlit.app/)
 [![Python Version](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Native RAG](https://img.shields.io/badge/Framework-100%25%20Native%20Python-000000?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![ChromaDB](https://img.shields.io/badge/Vector%20DB-ChromaDB-6A0DAD?style=for-the-badge)](https://trychroma.com)
 [![Groq API](https://img.shields.io/badge/LLM-Groq%20API-f55036?style=for-the-badge)](https://groq.com)
+
+🚀 **Live App**: [https://rag-adaptive.streamlit.app/](https://rag-adaptive.streamlit.app/)
 
 ![Adaptive RAG Executive Dashboard](ui/screenshot/ui.PNG)
 
