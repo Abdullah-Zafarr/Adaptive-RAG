@@ -3,26 +3,15 @@ from typing import List, Tuple, Dict, Any, Optional
 from ingestion.loaders import NativeDocument
 from vectordb.vector_store import VectorStoreManager
 
-# =====================================================================
-# RETRIEVER TOOL CLASS
-# Handles semantic document retrieval, distance score filtering, 
-# provenance payload formatting, and search performance telemetry.
-# =====================================================================
+# Handles semantic document retrieval, distance score filtering, provenance formatting, and telemetry.
 class RetrieverTool:
     """Native Retriever Tool with distance threshold filtering & telemetry metrics without LangChain."""
 
-    # -----------------------------------------------------------------
-    # STEP 1: INITIALIZATION
-    # Binds the retriever to an active VectorStoreManager instance.
-    # -----------------------------------------------------------------
+    # Binds the retriever to an active VectorStoreManager instance
     def __init__(self, vector_store_manager: VectorStoreManager):
         self.vdb_manager = vector_store_manager
 
-    # -----------------------------------------------------------------
-    # STEP 2: MAIN RETRIEVAL METHOD
-    # Executes query search, applies similarity thresholds, formats 
-    # provenance text for LLM context, and calculates statistics.
-    # -----------------------------------------------------------------
+    # Executes query search, applies similarity thresholds, formats provenance text, and calculates stats
     def retrieve(
         self,
         query: str,
@@ -38,11 +27,7 @@ class RetrieverTool:
         # Start timer for latency telemetry
         start_time = time.time()
         
-        # -------------------------------------------------------------
-        # STEP 2A: VECTOR STORE QUERY EXECUTION
-        # Executes either Maximal Marginal Relevance (MMR) or standard 
-        # Similarity Search on ChromaDB vector index.
-        # -------------------------------------------------------------
+        # Vector store query execution (MMR or standard similarity search)
         if search_type == "Maximal Marginal Relevance (MMR)":
             raw_docs = self.vdb_manager.max_marginal_relevance_search(query, k=top_k, active_doc_ids=active_doc_ids)
             doc_score_pairs = [(doc, 1.0) for doc in raw_docs]
@@ -56,11 +41,7 @@ class RetrieverTool:
         context_parts = []
         raw_char_count = 0
 
-        # -------------------------------------------------------------
-        # STEP 2B: THRESHOLD FILTERING & PROVENANCE FORMATTING
-        # Loops through matching document chunks, filters out chunks 
-        # exceeding distance threshold, and constructs context payload.
-        # -------------------------------------------------------------
+        # Filter matching document chunks by distance threshold and format context
         for idx, (doc, score) in enumerate(doc_score_pairs):
             norm_score = float(score)
             
@@ -89,10 +70,7 @@ class RetrieverTool:
                 f"[Provenance Node {idx+1} | Document: {filename} (Page {page})]\n{doc.page_content}"
             )
 
-        # -------------------------------------------------------------
-        # STEP 2C: FINAL CONTEXT PAYLOAD & TELEMETRY STATS
-        # Combines context snippets and computes compression metrics.
-        # -------------------------------------------------------------
+        # Combine context snippets and compute compression metrics
         formatted_context = "\n\n---\n\n".join(context_parts) if context_parts else "NO_MATCHING_PROVENANCE_FOUND"
 
         context_char_count = len(formatted_context)
@@ -103,4 +81,5 @@ class RetrieverTool:
         }
 
         return retrieved_items, formatted_context, retrieval_time_ms, compression_stats
+
 

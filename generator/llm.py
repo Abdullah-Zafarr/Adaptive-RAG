@@ -5,19 +5,13 @@ import requests
 from typing import Generator, Tuple, Optional
 from generator.prompts import RAG_SYSTEM_PROMPT
 
-# =====================================================================
-# LLM RESPONSE GENERATOR CLASS
 # Directly interacts with the Groq API for synchronous & streaming generation
-# =====================================================================
 class LLMResponseGenerator:
     """Native LLM Generator using Groq API directly without LangChain."""
 
     GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-    # -----------------------------------------------------------------
-    # HELPER: API KEY RETRIEVAL
     # Retrieves API Key from parameters or fallback environment variables
-    # -----------------------------------------------------------------
     @classmethod
     def _get_api_key(cls, api_key: Optional[str] = None) -> str:
         key = api_key or os.getenv("GROQ_API_KEY")
@@ -25,10 +19,7 @@ class LLMResponseGenerator:
             raise ValueError("Groq API Key is missing. Please provide it in sidebar or .env file.")
         return key.strip()
 
-    # -----------------------------------------------------------------
-    # METHOD 1: SYNCHRONOUS RESPONSE GENERATION
     # Sends structured prompt to Groq API and returns full response & latency
-    # -----------------------------------------------------------------
     @classmethod
     def generate_response(
         cls,
@@ -64,10 +55,7 @@ class LLMResponseGenerator:
         answer_text = data["choices"][0]["message"]["content"]
         return answer_text, gen_time_ms
 
-    # -----------------------------------------------------------------
-    # METHOD 2: STREAMING RESPONSE GENERATION
     # Streams LLM response token-by-token for real-time UI updates
-    # -----------------------------------------------------------------
     @classmethod
     def stream_response(
         cls,
@@ -108,4 +96,5 @@ class LLMResponseGenerator:
                             yield delta["content"]
                     except Exception:
                         pass
+
 

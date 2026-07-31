@@ -6,17 +6,12 @@ from typing import List, Dict, Any
 import pypdf
 import docx
 
-# =====================================================================
-# HELPER UTILITIES
-# =====================================================================
+# Helper utilities
 def get_file_hash(file_bytes: bytes) -> str:
     """Generate SHA256 hash of file content for unique tracking."""
     return hashlib.sha256(file_bytes).hexdigest()
 
-# =====================================================================
-# NATIVE DOCUMENT CLASS
 # Custom document object structure (replaces LangChain Document)
-# =====================================================================
 class NativeDocument:
     """Native Document container replacing LangChain Document."""
     def __init__(self, page_content: str, metadata: Dict[str, Any] = None):
@@ -26,17 +21,11 @@ class NativeDocument:
     def __repr__(self):
         return f"NativeDocument(len={len(self.page_content)}, metadata={self.metadata})"
 
-# =====================================================================
-# DOCUMENT LOADER TOOL CLASS
 # Parses PDF, TXT, DOCX, and Web URL inputs into NativeDocument lists
-# =====================================================================
 class DocumentLoaderTool:
     """Native Document Loader Tool for PDF, TXT, DOCX, and Web URLs without LangChain."""
 
-    # -----------------------------------------------------------------
-    # LOADER 1: PDF LOADER (With OCR Fallback)
-    # Extracts text per page; falls back to pdfplumber/pytesseract OCR
-    # -----------------------------------------------------------------
+    # Extracts text per page from PDF files (with OCR fallback)
     @staticmethod
     def load_pdf(file_path: str) -> List[NativeDocument]:
         """Load text and metadata from digital and scanned image PDF files (with OCR fallback)."""
@@ -82,10 +71,7 @@ class DocumentLoaderTool:
                 ))
         return docs
 
-    # -----------------------------------------------------------------
-    # LOADER 2: TXT LOADER
     # Reads raw text files with UTF-8 encoding
-    # -----------------------------------------------------------------
     @staticmethod
     def load_txt(file_path: str) -> List[NativeDocument]:
         """Load text from TXT files."""
@@ -102,10 +88,7 @@ class DocumentLoaderTool:
             }
         )]
 
-    # -----------------------------------------------------------------
-    # LOADER 3: DOCX LOADER
     # Reads Microsoft Word documents using python-docx
-    # -----------------------------------------------------------------
     @staticmethod
     def load_docx(file_path: str) -> List[NativeDocument]:
         """Load text from DOCX files using python-docx."""
@@ -123,10 +106,7 @@ class DocumentLoaderTool:
             }
         )]
 
-    # -----------------------------------------------------------------
-    # LOADER 4: WEB URL LOADER
     # Fetches webpage, strips HTML boilerplate, extracts clean text
-    # -----------------------------------------------------------------
     @staticmethod
     def load_url(url: str) -> List[NativeDocument]:
         """Load content from web URL using requests and BeautifulSoup4."""
@@ -153,10 +133,7 @@ class DocumentLoaderTool:
             }
         )]
 
-    # -----------------------------------------------------------------
-    # MAIN ROUTER: DYNAMIC FILE LOAD
     # Routes file path to correct parser based on extension
-    # -----------------------------------------------------------------
     @classmethod
     def load_file(cls, file_path: str) -> List[NativeDocument]:
         """Auto-detect extension and load file into NativeDocument objects."""
@@ -169,4 +146,5 @@ class DocumentLoaderTool:
             return cls.load_docx(file_path)
         else:
             raise ValueError(f"Unsupported file format: {ext}")
+
 

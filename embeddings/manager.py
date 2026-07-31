@@ -2,10 +2,7 @@ from typing import Any, List
 from sentence_transformers import SentenceTransformer
 from config import EMBEDDING_MODELS
 
-# =====================================================================
-# NATIVE EMBEDDING MODEL CLASS
-# Direct wrapper around HuggingFace SentenceTransformers
-# =====================================================================
+# Native wrapper around HuggingFace SentenceTransformers
 class NativeEmbeddingModel:
     """Native Wrapper for SentenceTransformer embeddings without LangChain."""
 
@@ -13,10 +10,7 @@ class NativeEmbeddingModel:
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
 
-    # -----------------------------------------------------------------
-    # DOCUMENT EMBEDDINGS
-    # Encodes list of document texts into normalized vector arrays
-    # -----------------------------------------------------------------
+    # Encodes a list of document texts into normalized vector arrays
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Generate normalized vector embeddings for a list of document strings."""
         if not texts:
@@ -24,19 +18,14 @@ class NativeEmbeddingModel:
         embeddings = self.model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
         return embeddings.tolist()
 
-    # -----------------------------------------------------------------
-    # QUERY EMBEDDING
-    # Encodes single search query into normalized vector array
-    # -----------------------------------------------------------------
+    # Encodes a single search query into a normalized vector array
     def embed_query(self, text: str) -> List[float]:
         """Generate normalized vector embedding for a query string."""
         embedding = self.model.encode(text, normalize_embeddings=True, show_progress_bar=False)
         return embedding.tolist()
 
-# =====================================================================
-# EMBEDDING MANAGER CLASS
+
 # Factory to instantiate embedding models and retrieve vector dimensions
-# =====================================================================
 class EmbeddingManager:
     """Manager to load local SentenceTransformer embedding models natively."""
 
@@ -57,4 +46,5 @@ class EmbeddingManager:
         if model_key in EMBEDDING_MODELS:
             return EMBEDDING_MODELS[model_key]["dimension"]
         return 384
+
 

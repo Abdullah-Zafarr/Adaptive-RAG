@@ -9,17 +9,11 @@ from config import REGISTRY_FILE, DOCUMENTS_DIR, SUPABASE_URL, SUPABASE_KEY
 from ingestion.loaders import DocumentLoaderTool, get_file_hash
 from ingestion.chunker import TextChunker
 
-# =====================================================================
-# DATA SOURCE MANAGER CLASS
 # Manages document registry, file ingestion, chunking, & Supabase cloud state
-# =====================================================================
 class DataSourceManager:
     """Manager to track active documents and coordinate dynamic add/delete operations backed by Supabase."""
 
-    # -----------------------------------------------------------------
-    # STEP 1: INITIALIZATION & DB CONNECTIVITY
     # Prepares document storage directory and connects to Supabase
-    # -----------------------------------------------------------------
     def __init__(self, registry_file: str = REGISTRY_FILE, docs_dir: str = DOCUMENTS_DIR):
         self.registry_file = registry_file
         self.docs_dir = docs_dir
@@ -35,10 +29,7 @@ class DataSourceManager:
                 print(f"Supabase DataSourceManager client error: {e}")
                 self.client = None
 
-    # -----------------------------------------------------------------
-    # STEP 2: REGISTRY FETCHING
     # Loads active documents registry from Supabase (or local JSON fallback)
-    # -----------------------------------------------------------------
     def load_registry(self) -> Dict[str, Dict[str, Any]]:
         """Load registry of active documents from Supabase (fallback to local)."""
         if self.client:
@@ -66,11 +57,7 @@ class DataSourceManager:
         registry = self.load_registry()
         return list(registry.values())
 
-    # -----------------------------------------------------------------
-    # STEP 3: FILE ADDITION & INGESTION PIPELINE
-    # Receives file bytes, parses document, splits into chunks, and upserts
-    # metadata into active_documents table.
-    # -----------------------------------------------------------------
+    # Receives file bytes, parses document, splits into chunks, and upserts metadata
     def add_file(self, file_name: str, file_bytes: bytes, chunk_size: int, chunk_overlap: int) -> tuple[Dict[str, Any], List[Any]]:
         """
         Save uploaded file, extract text, chunk with metadata, and register document in Supabase.
@@ -124,10 +111,7 @@ class DataSourceManager:
 
         return doc_info, chunks
 
-    # -----------------------------------------------------------------
-    # STEP 4: DOCUMENT DELETION & RESET
     # Deletes active document metadata from Supabase cloud database
-    # -----------------------------------------------------------------
     def remove_document(self, doc_id: str) -> Optional[Dict[str, Any]]:
         """Remove document record from Supabase."""
         registry = self.load_registry()
@@ -151,4 +135,5 @@ class DataSourceManager:
                 self.client.table("active_documents").delete().neq("doc_id", "").execute()
             except Exception as e:
                 print(f"Error clearing active_documents in Supabase: {e}")
+
 
