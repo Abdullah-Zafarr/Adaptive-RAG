@@ -170,9 +170,9 @@ class VectorStoreManager:
             print(f"Supabase search error: {e}")
             return []
 
-    def max_marginal_relevance_search(self, query: str, k: int = 4) -> List[NativeDocument]:
+    def max_marginal_relevance_search(self, query: str, k: int = 4, active_doc_ids: Optional[List[str]] = None) -> List[NativeDocument]:
         """Perform similarity search as default MMR alternative."""
-        results = self.similarity_search_with_score(query, k=k)
+        results = self.similarity_search_with_score(query, k=k, active_doc_ids=active_doc_ids)
         return [doc for doc, _ in results]
 
     def reset_db(self):

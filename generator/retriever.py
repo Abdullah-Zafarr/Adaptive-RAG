@@ -24,7 +24,7 @@ class RetrieverTool:
         start_time = time.time()
         
         if search_type == "Maximal Marginal Relevance (MMR)":
-            raw_docs = self.vdb_manager.max_marginal_relevance_search(query, k=top_k)
+            raw_docs = self.vdb_manager.max_marginal_relevance_search(query, k=top_k, active_doc_ids=active_doc_ids)
             doc_score_pairs = [(doc, 1.0) for doc in raw_docs]
         else:
             doc_score_pairs = self.vdb_manager.similarity_search_with_score(query, k=top_k, active_doc_ids=active_doc_ids)
