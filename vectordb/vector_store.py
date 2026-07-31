@@ -61,15 +61,22 @@ class VectorStoreManager:
         return ids
 
     def delete_document_by_id(self, doc_id: str):
-        """Delete all vector embeddings matching doc_id from Supabase."""
+        """Delete all vector embeddings matching doc_id or filename from Supabase."""
         if not self.client:
             return
         try:
+            # Purge by top-level doc_id column
             self.client.table("documents").delete().eq("doc_id", doc_id).execute()
+            # Purge by top-level filename column (for URL endpoints where doc_id equals filename/url)
+            self.client.table("documents").delete().eq("filename", doc_id).execute()
+            # Purge by JSON metadata doc_id
+            self.client.table("documents").delete().eq("metadata->>doc_id", doc_id).execute()
+            # Purge by JSON metadata filename
+            self.client.table("documents").delete().eq("metadata->>filename", doc_id).execute()
         except Exception as e:
-            print(f"Error purging doc_id {doc_id} from Supabase: {e}")
+            print(f"Error purging doc_id/filename {doc_id} from Supabase: {e}")
 
-    def similarity_search_with_score(self, query: str, k: int = 4) -> List[Tuple[NativeDocument, float]]:
+    def similarity_search_with_score(self, query: str, k: int = 4, active_doc_ids: Optional[List[str]] = None) -> List[Tuple[NativeDocument, float]]:
         """Perform native semantic similarity search returning documents and distance scores via Supabase RPC or client cosine fallback."""
         if not self.client:
             return []
@@ -87,7 +94,7 @@ class VectorStoreManager:
                     {
                         "query_embedding": query_embedding,
                         "match_threshold": 0.0,
-                        "match_count": k
+                        "match_count": k * 2 if active_doc_ids else k
                     }
                 ).execute()
 
@@ -95,10 +102,18 @@ class VectorStoreManager:
                     docs_with_scores = []
                     for row in rpc_res.data:
                         meta = row.get("metadata", {})
+                        doc_id = row.get("doc_id") or meta.get("doc_id")
+                        filename = row.get("filename") or meta.get("filename")
+                        
+                        # Filter against active registry if provided
+                        if active_doc_ids is not None:
+                            if doc_id not in active_doc_ids and filename not in active_doc_ids:
+                                continue
+
                         if not meta:
                             meta = {
-                                "doc_id": row.get("doc_id"),
-                                "filename": row.get("filename"),
+                                "doc_id": doc_id,
+                                "filename": filename,
                                 "page": row.get("page", 1)
                             }
                         doc = NativeDocument(page_content=row.get("content", ""), metadata=meta)
@@ -106,7 +121,7 @@ class VectorStoreManager:
                         sim = float(row.get("similarity", 0.0))
                         dist = max(0.0, 1.0 - sim)
                         docs_with_scores.append((doc, dist))
-                    return docs_with_scores
+                    return docs_with_scores[:k]
             except Exception as rpc_err:
                 pass
 
@@ -129,9 +144,23 @@ class VectorStoreManager:
                 emb = row.get("embedding")
                 if not emb:
                     continue
+                
+                doc_id = row.get("doc_id")
+                filename = row.get("filename")
+                meta = row.get("metadata", {}) or {}
+                if not doc_id:
+                    doc_id = meta.get("doc_id")
+                if not filename:
+                    filename = meta.get("filename")
+
+                # Filter against active registry if provided
+                if active_doc_ids is not None:
+                    if doc_id not in active_doc_ids and filename not in active_doc_ids:
+                        continue
+
                 dist = cosine_distance(query_embedding, emb)
-                meta = row.get("metadata", {}) or {"doc_id": row.get("doc_id"), "filename": row.get("filename")}
-                doc = NativeDocument(page_content=row.get("content", ""), metadata=meta)
+                meta_out = meta or {"doc_id": doc_id, "filename": filename}
+                doc = NativeDocument(page_content=row.get("content", ""), metadata=meta_out)
                 scored.append((doc, dist))
 
             scored.sort(key=lambda x: x[1])

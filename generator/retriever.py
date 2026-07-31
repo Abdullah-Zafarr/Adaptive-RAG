@@ -1,5 +1,5 @@
 import time
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 from ingestion.loaders import NativeDocument
 from vectordb.vector_store import VectorStoreManager
 
@@ -14,7 +14,8 @@ class RetrieverTool:
         query: str,
         top_k: int = 4,
         search_type: str = "Similarity Search",
-        distance_threshold: float = 2.0
+        distance_threshold: float = 2.0,
+        active_doc_ids: Optional[List[str]] = None
     ) -> Tuple[List[Dict[str, Any]], str, float, Dict[str, Any]]:
         """
         Execute semantic retrieval with distance thresholding.
@@ -26,7 +27,7 @@ class RetrieverTool:
             raw_docs = self.vdb_manager.max_marginal_relevance_search(query, k=top_k)
             doc_score_pairs = [(doc, 1.0) for doc in raw_docs]
         else:
-            doc_score_pairs = self.vdb_manager.similarity_search_with_score(query, k=top_k)
+            doc_score_pairs = self.vdb_manager.similarity_search_with_score(query, k=top_k, active_doc_ids=active_doc_ids)
 
         retrieval_time_ms = (time.time() - start_time) * 1000.0
 

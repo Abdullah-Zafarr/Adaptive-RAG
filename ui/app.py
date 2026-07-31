@@ -373,11 +373,13 @@ with main_col:
                 st.rerun()
             else:
                 with st.spinner("Searching knowledge base..."):
+                    active_ids = [d.get("doc_id") for d in active_docs] + [d.get("filename") for d in active_docs]
                     retrieved_items, formatted_context, retrieval_time, comp_stats = retriever_tool.retrieve(
                         query,
                         top_k=st.session_state.top_k,
                         search_type=st.session_state.search_type,
                         distance_threshold=st.session_state.distance_threshold,
+                        active_doc_ids=active_ids,
                     )
 
                 with st.spinner("Generating response..."):
