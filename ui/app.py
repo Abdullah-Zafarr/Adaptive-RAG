@@ -696,7 +696,7 @@ with main_col:
         st.markdown('<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-top: 14px; margin-bottom: 4px;">Chunk Overlap</div>', unsafe_allow_html=True)
         st.session_state.chunk_overlap = st.slider("Chunk Overlap", 0, 400, st.session_state.chunk_overlap, step=10, label_visibility="collapsed")
         
-        if st.button("🔄 Reset to Optimized Defaults", use_container_width=True):
+        if st.button("Reset to Optimized Defaults", use_container_width=True):
             st.session_state.top_k = DEFAULT_TOP_K
             st.session_state.distance_threshold = DEFAULT_DISTANCE_THRESHOLD
             st.session_state.chunk_size = DEFAULT_CHUNK_SIZE
