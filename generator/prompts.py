@@ -1,3 +1,8 @@
+# =====================================================================
+# RAG SYSTEM PROMPT
+# Formats context chunks and user question into strict executive instructions
+# to enforce zero-hallucination grounded responses.
+# =====================================================================
 RAG_SYSTEM_PROMPT = """You are an executive RAG Knowledge Assistant.
 Your objective is to answer the user's question accurately, clearly, and concisely based strictly on the provided Context Chunks.
 
@@ -13,6 +18,10 @@ User Question: {question}
 
 Answer:"""
 
+# =====================================================================
+# FAITHFULNESS EVALUATION PROMPT
+# Used by evaluation modules to rate answer grounding score (0.0 to 1.0)
+# =====================================================================
 FAITHFULNESS_EVAL_PROMPT = """You are an expert AI evaluator judging Answer Faithfulness and Grounding.
 Compare the Answer against the provided Context Chunks.
 
@@ -28,3 +37,4 @@ Return ONLY a single valid JSON object with the following schema:
   "score": <float between 0.0 and 1.0, where 1.0 means perfectly grounded and 0.0 means completely hallucinated>,
   "reason": "<short 1-sentence explanation of why score was given>"
 }}"""
+

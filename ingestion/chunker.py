@@ -3,14 +3,27 @@ from typing import List
 from ingestion.loaders import NativeDocument
 from config import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
 
+# =====================================================================
+# TEXT CHUNKER CLASS
+# Implements pure Python recursive character splitting with overlap
+# =====================================================================
 class TextChunker:
     """Native recursive character text chunking strategy in pure Python."""
 
+    # -----------------------------------------------------------------
+    # STEP 1: INITIALIZATION
+    # Configures target chunk size, overlap size, and fallback split hierarchy
+    # -----------------------------------------------------------------
     def __init__(self, chunk_size: int = DEFAULT_CHUNK_SIZE, chunk_overlap: int = DEFAULT_CHUNK_OVERLAP):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.separators = ["\n\n", "\n", ". ", " ", ""]
 
+    # -----------------------------------------------------------------
+    # STEP 2: RECURSIVE TEXT SPLITTING LOGIC
+    # Splits text recursively along double newlines, single newlines, 
+    # sentences, and words while preserving chunk overlap.
+    # -----------------------------------------------------------------
     def _split_text_recursive(self, text: str, separators: List[str]) -> List[str]:
         """Recursively split text into segments within chunk_size limit."""
         if not text:
@@ -63,6 +76,11 @@ class TextChunker:
 
         return [c for c in chunks if c.strip()]
 
+    # -----------------------------------------------------------------
+    # STEP 3: DOCUMENT CHUNKING WITH METADATA BINDING
+    # Processes raw loaded documents and tags each chunk with doc_id, 
+    # chunk_id, chunk_index, and ingestion timestamps.
+    # -----------------------------------------------------------------
     def split_documents(self, docs: List[NativeDocument], doc_id: str) -> List[NativeDocument]:
         """Split NativeDocuments into chunks with attached doc_id and unique chunk_ids."""
         chunked_docs = []
@@ -85,3 +103,4 @@ class TextChunker:
                 global_idx += 1
 
         return chunked_docs
+

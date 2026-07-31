@@ -5,9 +5,18 @@ from supabase import create_client, Client
 from ingestion.loaders import NativeDocument
 from config import SUPABASE_URL, SUPABASE_KEY
 
+# =====================================================================
+# VECTOR STORE MANAGER CLASS
+# Manages Supabase vector store table, document embeddings, pgvector RPC matches, 
+# and fallback client-side cosine similarity search.
+# =====================================================================
 class VectorStoreManager:
     """Manager for Supabase Vector Database using native Supabase Client + pgvector cosine similarity."""
 
+    # -----------------------------------------------------------------
+    # STEP 1: INITIALIZATION
+    # Binds embedding model and opens client connection to Supabase DB.
+    # -----------------------------------------------------------------
     def __init__(self, embedding_model: Any = None):
         self.embedding_model = embedding_model
         self.client: Optional[Client] = None
@@ -22,6 +31,11 @@ class VectorStoreManager:
                 print(f"Supabase Client Init Error: {e}")
                 self.client = None
 
+    # -----------------------------------------------------------------
+    # STEP 2: EMBED & INSERT DOCUMENTS
+    # Generates dense vector embeddings for text chunks and upserts 
+    # records into Supabase 'documents' table.
+    # -----------------------------------------------------------------
     def add_documents(self, chunks: List[NativeDocument]) -> List[str]:
         """Add document chunks to Supabase vector store table."""
         if not chunks or not self.client:
@@ -60,6 +74,10 @@ class VectorStoreManager:
 
         return ids
 
+    # -----------------------------------------------------------------
+    # STEP 3: DELETE EMBEDDINGS BY DOCUMENT ID
+    # Purges all rows matching a target doc_id or filename.
+    # -----------------------------------------------------------------
     def delete_document_by_id(self, doc_id: str):
         """Delete all vector embeddings matching doc_id or filename from Supabase."""
         if not self.client:
@@ -76,6 +94,11 @@ class VectorStoreManager:
         except Exception as e:
             print(f"Error purging doc_id/filename {doc_id} from Supabase: {e}")
 
+    # -----------------------------------------------------------------
+    # STEP 4: SEMANTIC SIMILARITY SEARCH
+    # Embeds user query and calculates nearest neighbors via Supabase RPC 
+    # function or client-side cosine distance.
+    # -----------------------------------------------------------------
     def similarity_search_with_score(self, query: str, k: int = 4, active_doc_ids: Optional[List[str]] = None) -> List[Tuple[NativeDocument, float]]:
         """Perform native semantic similarity search returning documents and distance scores via Supabase RPC or client cosine fallback."""
         if not self.client:
@@ -170,11 +193,19 @@ class VectorStoreManager:
             print(f"Supabase search error: {e}")
             return []
 
+    # -----------------------------------------------------------------
+    # STEP 5: MAXIMAL MARGINAL RELEVANCE (MMR) SEARCH
+    # Diversity-focused search wrapper over similarity search.
+    # -----------------------------------------------------------------
     def max_marginal_relevance_search(self, query: str, k: int = 4, active_doc_ids: Optional[List[str]] = None) -> List[NativeDocument]:
         """Perform similarity search as default MMR alternative."""
         results = self.similarity_search_with_score(query, k=k, active_doc_ids=active_doc_ids)
         return [doc for doc, _ in results]
 
+    # -----------------------------------------------------------------
+    # STEP 6: DATABASE RESET
+    # Purges all stored vectors from Supabase table.
+    # -----------------------------------------------------------------
     def reset_db(self):
         """Purge and reset all documents from Supabase table."""
         if not self.client:
@@ -183,3 +214,4 @@ class VectorStoreManager:
             self.client.table("documents").delete().neq("chunk_id", "").execute()
         except Exception as e:
             print(f"Error resetting Supabase table: {e}")
+

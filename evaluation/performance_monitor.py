@@ -4,9 +4,18 @@ from typing import List, Dict, Any, Optional
 from supabase import create_client, Client
 from config import SUPABASE_URL, SUPABASE_KEY, PERFORMANCE_LOG_FILE
 
+# =====================================================================
+# PERFORMANCE MONITOR CLASS
+# Real-time telemetry recorder & Grounding Confidence Index (GCI) evaluator
+# backed by Supabase cloud storage.
+# =====================================================================
 class PerformanceMonitor:
     """Advanced Telemetry & Grounding Confidence Index (GCI) Monitor backed by Supabase Cloud."""
 
+    # -----------------------------------------------------------------
+    # STEP 1: INITIALIZATION
+    # Connects to Supabase telemetry tables
+    # -----------------------------------------------------------------
     def __init__(self, log_file: str = PERFORMANCE_LOG_FILE):
         self.log_file = log_file
         self.client: Optional[Client] = None
@@ -20,6 +29,10 @@ class PerformanceMonitor:
                 print(f"Supabase PerformanceMonitor client error: {e}")
                 self.client = None
 
+    # -----------------------------------------------------------------
+    # STEP 2: LOAD TELEMETRY LOGS
+    # Fetches historic performance and evaluation records from Supabase
+    # -----------------------------------------------------------------
     def load_logs(self) -> List[Dict[str, Any]]:
         """Load performance logs from Supabase Cloud table (fallback to local)."""
         if self.client:
@@ -40,6 +53,10 @@ class PerformanceMonitor:
                 return []
         return []
 
+    # -----------------------------------------------------------------
+    # STEP 3: LOG QUERY EVENT & GCI METRICS
+    # Records total latency, distance scores, lexical overlap, and risk level
+    # -----------------------------------------------------------------
     def log_query_event(
         self,
         query: str,
@@ -93,6 +110,10 @@ class PerformanceMonitor:
 
         return log_entry
 
+    # -----------------------------------------------------------------
+    # STEP 4: GCI & HALLUCINATION RISK CALCULATION
+    # Evaluates word-level overlap and citation frequency to detect hallucination
+    # -----------------------------------------------------------------
     def compute_gci_metrics(self, response: str, retrieved_chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate Grounding Confidence Index (GCI), Citation Density, and Risk Category."""
         if not response or not retrieved_chunks:
@@ -130,6 +151,9 @@ class PerformanceMonitor:
             "risk_level": risk_level
         }
 
+    # -----------------------------------------------------------------
+    # STEP 5: PURGE LOGS
+    # -----------------------------------------------------------------
     def clear_logs(self):
         """Purge telemetry log history from Supabase."""
         if self.client:
@@ -137,3 +161,4 @@ class PerformanceMonitor:
                 self.client.table("performance_logs").delete().neq("query_id", "").execute()
             except Exception as e:
                 print(f"Error clearing performance_logs in Supabase: {e}")
+

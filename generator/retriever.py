@@ -3,12 +3,26 @@ from typing import List, Tuple, Dict, Any, Optional
 from ingestion.loaders import NativeDocument
 from vectordb.vector_store import VectorStoreManager
 
+# =====================================================================
+# RETRIEVER TOOL CLASS
+# Handles semantic document retrieval, distance score filtering, 
+# provenance payload formatting, and search performance telemetry.
+# =====================================================================
 class RetrieverTool:
     """Native Retriever Tool with distance threshold filtering & telemetry metrics without LangChain."""
 
+    # -----------------------------------------------------------------
+    # STEP 1: INITIALIZATION
+    # Binds the retriever to an active VectorStoreManager instance.
+    # -----------------------------------------------------------------
     def __init__(self, vector_store_manager: VectorStoreManager):
         self.vdb_manager = vector_store_manager
 
+    # -----------------------------------------------------------------
+    # STEP 2: MAIN RETRIEVAL METHOD
+    # Executes query search, applies similarity thresholds, formats 
+    # provenance text for LLM context, and calculates statistics.
+    # -----------------------------------------------------------------
     def retrieve(
         self,
         query: str,
@@ -21,24 +35,36 @@ class RetrieverTool:
         Execute semantic retrieval with distance thresholding.
         Returns (retrieved_items, formatted_context, retrieval_time_ms, compression_stats).
         """
+        # Start timer for latency telemetry
         start_time = time.time()
         
+        # -------------------------------------------------------------
+        # STEP 2A: VECTOR STORE QUERY EXECUTION
+        # Executes either Maximal Marginal Relevance (MMR) or standard 
+        # Similarity Search on ChromaDB vector index.
+        # -------------------------------------------------------------
         if search_type == "Maximal Marginal Relevance (MMR)":
             raw_docs = self.vdb_manager.max_marginal_relevance_search(query, k=top_k, active_doc_ids=active_doc_ids)
             doc_score_pairs = [(doc, 1.0) for doc in raw_docs]
         else:
             doc_score_pairs = self.vdb_manager.similarity_search_with_score(query, k=top_k, active_doc_ids=active_doc_ids)
 
+        # Record total retrieval time in milliseconds
         retrieval_time_ms = (time.time() - start_time) * 1000.0
 
         retrieved_items = []
         context_parts = []
         raw_char_count = 0
 
+        # -------------------------------------------------------------
+        # STEP 2B: THRESHOLD FILTERING & PROVENANCE FORMATTING
+        # Loops through matching document chunks, filters out chunks 
+        # exceeding distance threshold, and constructs context payload.
+        # -------------------------------------------------------------
         for idx, (doc, score) in enumerate(doc_score_pairs):
             norm_score = float(score)
             
-            # Apply Distance Threshold Filtering
+            # Apply Distance Threshold Filtering (discard low similarity matches)
             if norm_score > distance_threshold:
                 continue
 
@@ -47,6 +73,7 @@ class RetrieverTool:
             chunk_id = doc.metadata.get("chunk_id", f"chunk_{idx}")
             raw_char_count += len(doc.page_content)
 
+            # Store structured metadata for each retrieved chunk
             retrieved_items.append({
                 "chunk_id": chunk_id,
                 "content": doc.page_content,
@@ -57,10 +84,15 @@ class RetrieverTool:
                 "metadata": doc.metadata
             })
 
+            # Create readable context snippet with provenance metadata tag
             context_parts.append(
                 f"[Provenance Node {idx+1} | Document: {filename} (Page {page})]\n{doc.page_content}"
             )
 
+        # -------------------------------------------------------------
+        # STEP 2C: FINAL CONTEXT PAYLOAD & TELEMETRY STATS
+        # Combines context snippets and computes compression metrics.
+        # -------------------------------------------------------------
         formatted_context = "\n\n---\n\n".join(context_parts) if context_parts else "NO_MATCHING_PROVENANCE_FOUND"
 
         context_char_count = len(formatted_context)
@@ -71,3 +103,4 @@ class RetrieverTool:
         }
 
         return retrieved_items, formatted_context, retrieval_time_ms, compression_stats
+
