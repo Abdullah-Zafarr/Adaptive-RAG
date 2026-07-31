@@ -99,6 +99,8 @@ def get_engine(emb_key):
 
 try:
     embedding_inst, vdb_manager = get_engine(st.session_state.emb_model_key)
+    # Ensure VectorStoreManager uses current instance methods
+    vdb_manager = VectorStoreManager(embedding_model=embedding_inst)
     retriever_tool = RetrieverTool(vdb_manager) if vdb_manager else None
 except Exception as e:
     vdb_manager = None
